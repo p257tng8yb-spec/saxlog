@@ -1,0 +1,3887 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SaxLog - サックス練習ログ</title>
+  <meta name="description" content="サックスの基礎練習・24調スケール・エチュード番号別目標BPMを毎日記録できる練習ログアプリ" />
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SaxLog" />
+  <link rel="apple-touch-icon" href="./icon.png" />
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --bg-elevated: #171a21;
+      --bg-card: #1d212b;
+      --bg-card-hover: #242936;
+      --bg-input: #13161d;
+      --border: #2b3140;
+      --border-soft: rgba(255,255,255,0.07);
+      --text: #f2f4f8;
+      --text-sub: #a3acb9;
+      --text-muted: #6e7787;
+
+      --gold: #d4af37;
+      --gold-bright: #e8c75e;
+      --gold-dim: rgba(212, 175, 55, 0.16);
+      --gold-border: rgba(212, 175, 55, 0.48);
+
+      --teal: #4db6ac;
+      --teal-bright: #70d4ca;
+      --teal-dim: rgba(77, 182, 172, 0.15);
+      --teal-border: rgba(77, 182, 172, 0.45);
+
+      --amber: #f59e0b;
+      --amber-dim: rgba(245, 158, 11, 0.16);
+      --amber-border: rgba(245, 158, 11, 0.55);
+
+      --green: #34d399;
+      --green-dim: rgba(52, 211, 153, 0.15);
+
+      --danger: #ef4444;
+      --danger-dim: rgba(239, 68, 68, 0.16);
+
+      --radius: 14px;
+      --radius-sm: 10px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --nav-height: 64px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Noto Sans JP", sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+      min-height: 100%;
+      overscroll-behavior-y: none;
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .app-shell {
+      max-width: 560px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
+    }
+
+    /* Header */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(15, 17, 21, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 16px 10px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+      color: var(--gold-bright);
+    }
+
+    .brand-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+    }
+
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 6px;
+    }
+
+    .date-nav-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+    .date-nav-btn:hover { background: var(--bg-card-hover); color: var(--text); }
+
+    .date-label-btn {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 6px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .today-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--gold-dim);
+      color: var(--gold-bright);
+      border: 1px solid var(--gold-border);
+      margin-left: 2px;
+    }
+
+    /* Main Content */
+    .main-view {
+      padding: 14px 14px 10px;
+    }
+
+    /* Daily Summary Strip */
+    .summary-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #1d212b 0%, #171a22 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .summary-total {
+      display: flex;
+      flex-direction: column;
+    }
+    .summary-total-label {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+    .summary-total-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gold-bright);
+      line-height: 1.2;
+    }
+    .summary-total-val small {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-left: 2px;
+    }
+
+    .summary-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+    }
+    .pill-stat.active-basic { border-color: var(--gold-border); color: var(--gold-bright); background: var(--gold-dim); }
+    .pill-stat.active-scale { border-color: var(--teal-border); color: var(--teal-bright); background: var(--teal-dim); }
+    .pill-stat.active-etude { border-color: var(--amber-border); color: #fbbf24; background: var(--amber-dim); }
+
+    /* Pillar Segment Control */
+    .segment-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: var(--bg-elevated);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    .segment-btn {
+      min-height: 40px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .segment-btn.active {
+      background: var(--gold);
+      color: #111318;
+      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+    }
+
+    /* Section Header */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      min-height: 36px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-mini {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+    }
+    .btn-mini.gold {
+      background: var(--gold-dim);
+      border-color: var(--gold-border);
+      color: var(--gold-bright);
+    }
+    .btn-mini.primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #111318;
+    }
+    .btn-mini.active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #111318;
+    }
+    .btn-mini.teal {
+      background: var(--teal-dim);
+      border-color: var(--teal-border);
+      color: var(--teal-bright);
+    }
+    .btn-mini.amber {
+      background: var(--amber-dim);
+      border-color: var(--amber-border);
+      color: #fbbf24;
+    }
+
+    .edit-hint {
+      font-size: 11px;
+      color: var(--gold-bright);
+      background: var(--gold-dim);
+      border: 1px dashed var(--gold-border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Menu Cards Grid (Basics & Etude Books) */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .menu-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 12px 11px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 98px;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .menu-card:hover { background: var(--bg-card-hover); }
+    .menu-card.done-today {
+      border-color: var(--gold-border);
+      background: linear-gradient(160deg, rgba(212,175,55,0.13) 0%, var(--bg-card) 75%);
+    }
+    .menu-card.editing {
+      border-style: dashed;
+      border-color: rgba(212, 175, 55, 0.55);
+      touch-action: none;
+      padding-top: 24px;
+    }
+    .menu-card.dragging {
+      opacity: 0.45;
+      transform: scale(0.96);
+    }
+    .menu-card.drag-over {
+      border: 2px solid var(--gold-bright);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
+    }
+
+    .card-grip {
+      position: absolute;
+      top: 5px;
+      left: 8px;
+      font-size: 13px;
+      color: var(--text-sub);
+      letter-spacing: -1px;
+      pointer-events: none;
+    }
+
+    .card-del-btn {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+      z-index: 5;
+    }
+
+    .card-top-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .done-check {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #111318;
+      font-size: 12px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: auto;
+    }
+
+    .bpm-chip {
+      font-weight: 700;
+      color: var(--gold-bright);
+    }
+
+    .elapsed-chip {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-sub);
+    }
+    .elapsed-chip.warn {
+      background: var(--amber-dim);
+      color: #fbbf24;
+    }
+    .elapsed-chip.today {
+      background: var(--gold-dim);
+      color: var(--gold-bright);
+    }
+
+    /* Etude Book Specific */
+    .etude-book-card {
+      grid-column: span 2;
+      min-height: 86px;
+    }
+
+    .etude-progress-wrap {
+      margin-top: 8px;
+    }
+
+    .etude-progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .etude-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+      border-radius: 999px;
+    }
+
+    .etude-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge-mini {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      color: var(--text-sub);
+    }
+    .badge-mini.warn {
+      background: var(--amber-dim);
+      color: #fbbf24;
+      border: 1px solid var(--amber-border);
+    }
+    .badge-mini.gold {
+      background: var(--gold-dim);
+      color: var(--gold-bright);
+    }
+    .badge-mini.green {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    /* Etude Level 2: Number Grid */
+    .etude-sub-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .etude-sub-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .back-btn {
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 9px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .etude-sub-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--gold-bright);
+      margin-bottom: 6px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .filter-pill {
+      min-height: 34px;
+      padding: 0 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .filter-pill.active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #111318;
+    }
+    .filter-pill.active-amber {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #111318;
+    }
+
+    .etude-num-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    @media (min-width: 480px) {
+      .etude-num-grid { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    .num-tile {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 8px 6px 7px;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      position: relative;
+    }
+    .num-tile.practiced {
+      background: #202532;
+      border-color: rgba(255,255,255,0.16);
+    }
+    .num-tile.target-unreached {
+      background: linear-gradient(160deg, rgba(245, 158, 11, 0.16) 0%, var(--bg-card) 85%);
+      border-color: var(--amber-border);
+    }
+    .num-tile.target-reached {
+      background: linear-gradient(160deg, rgba(52, 211, 153, 0.13) 0%, var(--bg-card) 85%);
+      border-color: rgba(52, 211, 153, 0.48);
+    }
+    .num-tile.done-today {
+      box-shadow: 0 0 0 1.5px var(--gold);
+    }
+
+    .num-tile-no {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .num-tile-bpm {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .num-tile.target-unreached .num-tile-bpm { color: #fbbf24; }
+    .num-tile.target-reached .num-tile-bpm { color: var(--green); }
+    .num-tile.practiced:not(.target-unreached):not(.target-reached) .num-tile-bpm { color: var(--gold-bright); }
+
+    .num-tile-days {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .num-tile.done-today .num-tile-days { color: var(--gold-bright); font-weight: 700; }
+
+    .num-dot-today {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    /* Scale Controls & Uniform 24-Key Grid */
+    .scale-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .scale-group-label {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin: 12px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .scale-group-label.major { color: var(--gold-bright); }
+    .scale-group-label.minor { color: var(--teal-bright); }
+
+    .scale-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .scale-tile {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 6px 7px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 112px; /* Strict uniform height for ALL 24 keys */
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .scale-tile.major {
+      border-top: 2px solid rgba(212, 175, 55, 0.45);
+    }
+    .scale-tile.minor {
+      border-top: 2px solid rgba(77, 182, 172, 0.45);
+    }
+    .scale-tile.done-today.major {
+      border-color: var(--gold-bright);
+      background: linear-gradient(170deg, rgba(212,175,55,0.16) 0%, var(--bg-card) 80%);
+    }
+    .scale-tile.done-today.minor {
+      border-color: var(--teal-bright);
+      background: linear-gradient(170deg, rgba(77,182,172,0.16) 0%, var(--bg-card) 80%);
+    }
+
+    .scale-tile-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 3px;
+      min-height: 20px;
+    }
+
+    .scale-key-name {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .scale-key-name.compact {
+      font-size: 12.5px;
+      letter-spacing: -0.02em;
+    }
+    .scale-tile.major .scale-key-name { color: var(--gold-bright); }
+    .scale-tile.minor .scale-key-name { color: var(--teal-bright); }
+
+    .scale-acc-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-sub);
+      background: rgba(255,255,255,0.06);
+      padding: 1px 5px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .scale-acc-badge.compact {
+      font-size: 9px;
+      padding: 1px 4px;
+    }
+
+    .scale-staff-box {
+      width: 100%;
+      height: 44px; /* Identical graphic height across all 24 keys */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.22);
+      border-radius: 7px;
+      margin: 4px 0;
+      overflow: hidden;
+    }
+
+    .scale-staff-box svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .scale-tile-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-sub);
+      min-height: 15px;
+    }
+
+    /* Today's Logs List */
+    .log-list-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .log-item:last-child { border-bottom: none; padding-bottom: 2px; }
+
+    .log-main { flex: 1; min-width: 0; }
+    .log-title-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 3px;
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cat-dot.basic { background: var(--gold); }
+    .cat-dot.scale { background: var(--teal); }
+    .cat-dot.etude { background: var(--amber); }
+
+    .log-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .log-meta-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .log-memo {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-sub);
+      word-break: break-word;
+    }
+
+    .log-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .icon-btn.danger:hover { color: #fca5a5; border-color: rgba(239,68,68,0.45); }
+
+    /* Analytics */
+    .card-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .stacked-bar {
+      height: 14px;
+      border-radius: 999px;
+      background: var(--bg-input);
+      overflow: hidden;
+      display: flex;
+      margin: 10px 0 12px;
+    }
+    .bar-seg.basic { background: var(--gold); }
+    .bar-seg.scale { background: var(--teal); }
+    .bar-seg.etude { background: var(--amber); }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .legend-box {
+      background: var(--bg-input);
+      border-radius: 10px;
+      padding: 8px;
+      text-align: center;
+    }
+    .legend-label { font-size: 11px; color: var(--text-sub); }
+    .legend-val { font-size: 15px; font-weight: 800; margin-top: 2px; }
+    .legend-pct { font-size: 11px; color: var(--text-muted); }
+
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 10px 12px;
+      width: 100%;
+      text-align: left;
+    }
+    .rank-row:hover { background: var(--bg-card-hover); }
+
+    .rank-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .rank-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rank-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .coverage-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .cov-cell {
+      border-radius: 8px;
+      padding: 6px 2px;
+      text-align: center;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      min-height: 46px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    .cov-cell.major.lv3 { background: rgba(212,175,55,0.32); border-color: var(--gold-bright); }
+    .cov-cell.major.lv2 { background: rgba(212,175,55,0.18); border-color: var(--gold-border); }
+    .cov-cell.major.lv1 { background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.25); }
+    .cov-cell.minor.lv3 { background: rgba(77,182,172,0.32); border-color: var(--teal-bright); }
+    .cov-cell.minor.lv2 { background: rgba(77,182,172,0.18); border-color: var(--teal-border); }
+    .cov-cell.minor.lv1 { background: rgba(77,182,172,0.08); border-color: rgba(77,182,172,0.25); }
+
+    .cov-key { font-size: 11px; font-weight: 800; line-height: 1.1; }
+    .cov-key.compact { font-size: 9.5px; }
+    .cov-cell.major .cov-key { color: var(--gold-bright); }
+    .cov-cell.minor .cov-key { color: var(--teal-bright); }
+    .cov-sub { font-size: 9px; color: var(--text-sub); }
+
+    /* Calendar */
+    .cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      background: var(--bg-input);
+      border: 1px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    .cal-cell.empty { background: transparent; pointer-events: none; }
+    .cal-cell.hm1 { background: rgba(212,175,55,0.14); color: var(--text); }
+    .cal-cell.hm2 { background: rgba(212,175,55,0.28); color: var(--text); }
+    .cal-cell.hm3 { background: rgba(212,175,55,0.48); color: #fff; }
+    .cal-cell.hm4 { background: rgba(212,175,55,0.78); color: #111318; }
+    .cal-cell.is-today { border-color: var(--teal-bright); }
+    .cal-cell.selected { border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(212,175,55,0.4); }
+    .cal-min { font-size: 9px; opacity: 0.85; font-weight: 600; margin-top: 1px; }
+
+    /* Settings */
+    .setting-btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .action-btn {
+      min-height: 48px;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 100%;
+    }
+    .action-btn.gold {
+      background: var(--gold-dim);
+      border-color: var(--gold-border);
+      color: var(--gold-bright);
+    }
+    .action-btn.danger {
+      background: var(--danger-dim);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      background: rgba(18, 21, 28, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    .bottom-nav-inner {
+      max-width: 560px;
+      margin: 0 auto;
+      height: var(--nav-height);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .nav-tab.active { color: var(--gold-bright); }
+    .nav-icon { font-size: 19px; line-height: 1; }
+
+    /* Modals / Bottom Sheets (Non-interfering when closed!) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(0, 0, 0, 0.68);
+      display: none;
+      pointer-events: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-backdrop.open {
+      display: flex;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: #181c24;
+      border-top-left-radius: 22px;
+      border-top-right-radius: 22px;
+      border-top: 1px solid var(--border);
+      padding: 14px 16px calc(18px + var(--safe-bottom));
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 auto 12px;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Etude Number Quick Switcher in Sheet */
+    .etude-sheet-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 8px;
+      margin-bottom: 12px;
+    }
+
+    .etude-nav-step {
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .etude-nav-step:disabled { opacity: 0.35; pointer-events: none; }
+
+    .etude-nav-current {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--gold-bright);
+    }
+
+    .sheet-scale-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+    }
+    .sheet-scale-banner .staff-lg {
+      width: 150px;
+      height: 54px;
+      flex-shrink: 0;
+    }
+
+    /* Form Controls */
+    .field-block {
+      margin-bottom: 14px;
+    }
+
+    .field-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+
+    .stepper-row {
+      display: grid;
+      grid-template-columns: 46px 46px 1fr 46px 46px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .step-btn {
+      min-height: 44px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-btn:active { background: var(--bg-card-hover); }
+
+    .num-input {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--gold-bright);
+      outline: none;
+    }
+    .num-input:focus { border-color: var(--gold); }
+    .num-input:disabled { opacity: 0.4; }
+
+    .text-input, .text-area {
+      width: 100%;
+      border-radius: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+    }
+    .text-input:focus, .text-area:focus { border-color: var(--gold); }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip-btn {
+      min-height: 34px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    .chip-btn.active {
+      background: var(--gold-dim);
+      border-color: var(--gold-border);
+      color: var(--gold-bright);
+    }
+    .chip-btn.tag-active {
+      background: var(--teal-dim);
+      border-color: var(--teal-border);
+      color: var(--teal-bright);
+    }
+
+    /* Timer Box */
+    .timer-box {
+      margin-top: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .timer-clock {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+    .timer-clock.running { color: var(--gold-bright); }
+
+    .timer-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Target BPM Box */
+    .target-status-hint {
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 6px;
+      padding: 5px 9px;
+      border-radius: 8px;
+    }
+    .target-status-hint.unreached {
+      background: var(--amber-dim);
+      color: #fbbf24;
+    }
+    .target-status-hint.reached {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .toggle-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+    .toggle-inline input {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--gold);
+    }
+
+    .sheet-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn-save {
+      flex: 1;
+      min-height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+      color: #111318;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+    }
+
+    .btn-cancel {
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* Confirm Dialog */
+    .dialog-card {
+      width: calc(100% - 32px);
+      max-width: 380px;
+      margin: auto;
+      background: #1b202a;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.65);
+    }
+    .dialog-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+    .dialog-msg { font-size: 13px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.5; }
+    .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* Toast (Pointer-events passthrough except buttons!) */
+    .toast-container {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
+      z-index: 120;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      max-width: 520px;
+      width: 100%;
+      background: #232836;
+      border: 1px solid var(--gold-border);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .toast-undo-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--gold);
+      color: #111318;
+      font-size: 12px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-header">
+      <div class="header-row">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <span>SaxLog</span>
+        </div>
+        <div class="date-nav" id="headerDateNav">
+          <button type="button" class="date-nav-btn" data-action="shift-date" data-delta="-1" aria-label="前日">◀</button>
+          <button type="button" class="date-label-btn" data-action="go-today" id="headerDateLabel">----/--/--</button>
+          <button type="button" class="date-nav-btn" data-action="shift-date" data-delta="1" aria-label="翌日">▶</button>
+          <button type="button" class="today-pill hidden" data-action="go-today" id="headerTodayPill">今日</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-view" id="mainView"></main>
+
+    <nav class="bottom-nav" aria-label="メインナビゲーション">
+      <div class="bottom-nav-inner" id="bottomNav">
+        <button type="button" class="nav-tab active" data-action="switch-tab" data-tab="record">
+          <span class="nav-icon">🎷</span>
+          <span>記録</span>
+        </button>
+        <button type="button" class="nav-tab" data-action="switch-tab" data-tab="analytics">
+          <span class="nav-icon">📊</span>
+          <span>分析</span>
+        </button>
+        <button type="button" class="nav-tab" data-action="switch-tab" data-tab="history">
+          <span class="nav-icon">📅</span>
+          <span>履歴</span>
+        </button>
+        <button type="button" class="nav-tab" data-action="switch-tab" data-tab="settings">
+          <span class="nav-icon">⚙️</span>
+          <span>設定</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Logging Bottom Sheet -->
+  <div class="modal-backdrop" id="logModal" data-action="backdrop-close" data-modal="logModal">
+    <div class="sheet" id="logSheetContent"></div>
+  </div>
+
+  <!-- Add Menu Bottom Sheet -->
+  <div class="modal-backdrop" id="addMenuModal" data-action="backdrop-close" data-modal="addMenuModal">
+    <div class="sheet" id="addMenuSheetContent"></div>
+  </div>
+
+  <!-- Paste JSON Import Modal -->
+  <div class="modal-backdrop" id="importPasteModal" data-action="backdrop-close" data-modal="importPasteModal">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title">JSONテキストを貼り付けて復元</div>
+        <button type="button" class="close-btn" data-action="close-modal" data-modal="importPasteModal">×</button>
+      </div>
+      <div class="field-block">
+        <textarea id="importJsonTextarea" class="text-area" rows="7" placeholder="エクスポートしたJSONデータを貼り付けてください"></textarea>
+      </div>
+      <div class="sheet-footer">
+        <button type="button" class="btn-cancel" data-action="close-modal" data-modal="importPasteModal">キャンセル</button>
+        <button type="button" class="btn-save" data-action="confirm-paste-import">インポート実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Dialog -->
+  <div class="modal-backdrop" id="confirmModal" data-action="backdrop-close" data-modal="confirmModal">
+    <div class="dialog-card">
+      <div class="dialog-title" id="confirmTitle">確認</div>
+      <div class="dialog-msg" id="confirmMessage"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn-mini" data-action="close-modal" data-modal="confirmModal">キャンセル</button>
+        <button type="button" class="btn-mini primary" id="confirmOkBtn" data-action="confirm-ok">実行する</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="jsonFileInput" accept="application/json,.json" class="hidden" />
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ========================
+       Constants & Definitions
+       ======================== */
+    const STORAGE_KEY = 'saxlog_v5_data';
+    const LEGACY_KEYS = ['saxlog_v4_data', 'saxlog_v3_data', 'saxlog_data'];
+    const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
+    const SCALES = [
+      // Major (12) - Uppercase
+      { id: 'sc_C',   name: 'C',      mode: 'major', fifth: 0,  chroma: 0,  accType: 'none',  accCount: 0, badge: '0' },
+      { id: 'sc_G',   name: 'G',      mode: 'major', fifth: 1,  chroma: 7,  accType: 'sharp', accCount: 1, badge: '♯1' },
+      { id: 'sc_D',   name: 'D',      mode: 'major', fifth: 2,  chroma: 2,  accType: 'sharp', accCount: 2, badge: '♯2' },
+      { id: 'sc_A',   name: 'A',      mode: 'major', fifth: 3,  chroma: 9,  accType: 'sharp', accCount: 3, badge: '♯3' },
+      { id: 'sc_E',   name: 'E',      mode: 'major', fifth: 4,  chroma: 4,  accType: 'sharp', accCount: 4, badge: '♯4' },
+      { id: 'sc_B',   name: 'B',      mode: 'major', fifth: 5,  chroma: 11, accType: 'sharp', accCount: 5, badge: '♯5' },
+      { id: 'sc_Fs',  name: 'F♯/G♭', mode: 'major', fifth: 6,  chroma: 6,  accType: 'both6', accCount: 6, badge: '♯6/♭6' },
+      { id: 'sc_Db',  name: 'D♭',    mode: 'major', fifth: 7,  chroma: 1,  accType: 'flat',  accCount: 5, badge: '♭5' },
+      { id: 'sc_Ab',  name: 'A♭',    mode: 'major', fifth: 8,  chroma: 8,  accType: 'flat',  accCount: 4, badge: '♭4' },
+      { id: 'sc_Eb',  name: 'E♭',    mode: 'major', fifth: 9,  chroma: 3,  accType: 'flat',  accCount: 3, badge: '♭3' },
+      { id: 'sc_Bb',  name: 'B♭',    mode: 'major', fifth: 10, chroma: 10, accType: 'flat',  accCount: 2, badge: '♭2' },
+      { id: 'sc_F',   name: 'F',      mode: 'major', fifth: 11, chroma: 5,  accType: 'flat',  accCount: 1, badge: '♭1' },
+      // Minor (12) - Lowercase
+      { id: 'sc_am',  name: 'a',      mode: 'minor', fifth: 0,  chroma: 9,  accType: 'none',  accCount: 0, badge: '0' },
+      { id: 'sc_em',  name: 'e',      mode: 'minor', fifth: 1,  chroma: 4,  accType: 'sharp', accCount: 1, badge: '♯1' },
+      { id: 'sc_bm',  name: 'b',      mode: 'minor', fifth: 2,  chroma: 11, accType: 'sharp', accCount: 2, badge: '♯2' },
+      { id: 'sc_fsm', name: 'f♯',    mode: 'minor', fifth: 3,  chroma: 6,  accType: 'sharp', accCount: 3, badge: '♯3' },
+      { id: 'sc_csm', name: 'c♯',    mode: 'minor', fifth: 4,  chroma: 1,  accType: 'sharp', accCount: 4, badge: '♯4' },
+      { id: 'sc_gsm', name: 'g♯',    mode: 'minor', fifth: 5,  chroma: 8,  accType: 'sharp', accCount: 5, badge: '♯5' },
+      { id: 'sc_dsm', name: 'd♯/e♭', mode: 'minor', fifth: 6,  chroma: 3,  accType: 'both6', accCount: 6, badge: '♯6/♭6' },
+      { id: 'sc_bbm', name: 'b♭',    mode: 'minor', fifth: 7,  chroma: 10, accType: 'flat',  accCount: 5, badge: '♭5' },
+      { id: 'sc_fm',  name: 'f',      mode: 'minor', fifth: 8,  chroma: 5,  accType: 'flat',  accCount: 4, badge: '♭4' },
+      { id: 'sc_cm',  name: 'c',      mode: 'minor', fifth: 9,  chroma: 0,  accType: 'flat',  accCount: 3, badge: '♭3' },
+      { id: 'sc_gm',  name: 'g',      mode: 'minor', fifth: 10, chroma: 7,  accType: 'flat',  accCount: 2, badge: '♭2' },
+      { id: 'sc_dm',  name: 'd',      mode: 'minor', fifth: 11, chroma: 2,  accType: 'flat',  accCount: 1, badge: '♭1' }
+    ];
+
+    const SCALE_MAP = {};
+    SCALES.forEach(s => { SCALE_MAP[s.id] = s; });
+
+    function getDefaultData() {
+      return {
+        version: 5,
+        basics: [
+          { id: 'b_longtone',  name: 'ロングトーン',           defaultBpm: 60,   defaultDuration: 10 },
+          { id: 'b_overtone',  name: '倍音・オーバートーン',   defaultBpm: null, defaultDuration: 10 },
+          { id: 'b_tonguing',  name: 'タンギング',             defaultBpm: 100,  defaultDuration: 10 },
+          { id: 'b_dynamics',  name: 'ダイナミクス・サブトーン', defaultBpm: 60, defaultDuration: 10 },
+          { id: 'b_vibrato',   name: 'ビブラート',             defaultBpm: 72,   defaultDuration: 5  },
+          { id: 'b_altissimo', name: 'アルティッシモ・フラジオ', defaultBpm: null, defaultDuration: 10 }
+        ],
+        etudes: [
+          { id: 'e_ferling', name: 'フェルリング（48の練習曲）', hasNumbers: true,  startNum: 1, endNum: 48, defaultBpm: 96,  defaultDuration: 15 },
+          { id: 'e_lacour',  name: 'ラクール（50の練習曲）',     hasNumbers: true,  startNum: 1, endNum: 50, defaultBpm: 100, defaultDuration: 15 },
+          { id: 'e_mule',    name: 'ミュール（練習曲集）',       hasNumbers: false, startNum: 1, endNum: 1,  defaultBpm: 100, defaultDuration: 15 }
+        ],
+        etudeTargets: {},
+        logs: [],
+        ui: {
+          scaleSort: 'fifths',
+          scaleFilter: 'all',
+          etudeNumberFilter: 'all',
+          analyticsPeriod: 7
+        }
+      };
+    }
+
+    /* ========================
+       Utility Helpers
+       ======================== */
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function toDateStr(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function todayStr() {
+      return toDateStr(new Date());
+    }
+
+    function parseDateStr(str) {
+      const p = String(str).split('-').map(Number);
+      return new Date(p[0], (p[1] || 1) - 1, p[2] || 1);
+    }
+
+    function addDays(dateStr, delta) {
+      const d = parseDateStr(dateStr);
+      d.setDate(d.getDate() + delta);
+      return toDateStr(d);
+    }
+
+    function diffDays(olderDateStr, newerDateStr) {
+      if (!olderDateStr) return null;
+      const a = parseDateStr(olderDateStr);
+      const b = parseDateStr(newerDateStr || todayStr());
+      return Math.round((b.getTime() - a.getTime()) / 86400000);
+    }
+
+    function formatDisplayDate(dateStr) {
+      const d = parseDateStr(dateStr);
+      return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}(${WEEKDAYS[d.getDay()]})`;
+    }
+
+    function formatElapsedLabel(days) {
+      if (days === null || days === undefined) return '未実施';
+      if (days <= 0) return '今日';
+      if (days === 1) return '昨日';
+      return `${days}日前`;
+    }
+
+    function uid(prefix) {
+      return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function etudeTargetKey(etudeId, num) {
+      return (num !== null && num !== undefined && num !== '') ? `${etudeId}#${num}` : `${etudeId}`;
+    }
+
+    /* ========================
+       Storage & Migration
+       ======================== */
+    function sanitizeData(raw) {
+      const def = getDefaultData();
+      if (!raw || typeof raw !== 'object') return def;
+
+      const basics = Array.isArray(raw.basics) && raw.basics.length >= 0
+        ? raw.basics.filter(x => x && x.id && x.name).map(x => ({
+            id: String(x.id),
+            name: String(x.name),
+            defaultBpm: (x.defaultBpm === null || x.defaultBpm === '' || isNaN(Number(x.defaultBpm))) ? null : Number(x.defaultBpm),
+            defaultDuration: Math.max(1, Number(x.defaultDuration) || 10)
+          }))
+        : def.basics;
+
+      const etudes = Array.isArray(raw.etudes) && raw.etudes.length >= 0
+        ? raw.etudes.filter(x => x && x.id && x.name).map(x => {
+            const isFerlingLegacy = x.name.includes('フェルリング') && x.hasNumbers === undefined;
+            const isLacourLegacy = x.name.includes('ラクール') && x.hasNumbers === undefined;
+            const hasNumbers = x.hasNumbers !== undefined ? Boolean(x.hasNumbers) : (isFerlingLegacy || isLacourLegacy);
+            const startNum = Math.max(1, Number(x.startNum) || 1);
+            const endNum = hasNumbers
+              ? Math.max(startNum, Number(x.endNum) || (isFerlingLegacy ? 48 : 50))
+              : 1;
+            return {
+              id: String(x.id),
+              name: String(x.name),
+              hasNumbers,
+              startNum,
+              endNum,
+              defaultBpm: (x.defaultBpm === null || x.defaultBpm === '' || isNaN(Number(x.defaultBpm))) ? 100 : Number(x.defaultBpm),
+              defaultDuration: Math.max(1, Number(x.defaultDuration) || 15)
+            };
+          })
+        : def.etudes;
+
+      const etudeTargets = {};
+      if (raw.etudeTargets && typeof raw.etudeTargets === 'object') {
+        Object.keys(raw.etudeTargets).forEach(k => {
+          const v = Number(raw.etudeTargets[k]);
+          if (v > 0 && isFinite(v)) etudeTargets[k] = Math.round(v);
+        });
+      }
+
+      const logs = Array.isArray(raw.logs)
+        ? raw.logs.filter(l => l && l.date && l.category && l.itemId).map(l => ({
+            id: String(l.id || uid('log')),
+            date: String(l.date),
+            category: String(l.category),
+            itemId: String(l.itemId),
+            itemName: String(l.itemName || ''),
+            etudeNum: (l.etudeNum !== null && l.etudeNum !== undefined && l.etudeNum !== '') ? Number(l.etudeNum) : null,
+            bpm: (l.bpm !== null && l.bpm !== undefined && l.bpm !== '' && !isNaN(Number(l.bpm))) ? Number(l.bpm) : null,
+            targetBpm: (l.targetBpm !== null && l.targetBpm !== undefined && l.targetBpm !== '' && !isNaN(Number(l.targetBpm))) ? Number(l.targetBpm) : null,
+            duration: Math.max(1, Number(l.duration) || 5),
+            tags: Array.isArray(l.tags) ? l.tags.map(String) : [],
+            memo: String(l.memo || ''),
+            createdAt: Number(l.createdAt) || Date.now()
+          }))
+        : [];
+
+      const ui = {
+        scaleSort: (raw.ui && raw.ui.scaleSort === 'chromatic') ? 'chromatic' : 'fifths',
+        scaleFilter: (raw.ui && ['all', 'major', 'minor'].includes(raw.ui.scaleFilter)) ? raw.ui.scaleFilter : 'all',
+        etudeNumberFilter: (raw.ui && ['all', 'unreached', 'review', 'untouched'].includes(raw.ui.etudeNumberFilter)) ? raw.ui.etudeNumberFilter : 'all',
+        analyticsPeriod: (raw.ui && Number(raw.ui.analyticsPeriod) === 30) ? 30 : 7
+      };
+
+      return { version: 5, basics, etudes, etudeTargets, logs, ui };
+    }
+
+    function loadData() {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) return sanitizeData(JSON.parse(s));
+        for (const k of LEGACY_KEYS) {
+          const old = localStorage.getItem(k);
+          if (old) {
+            const migrated = sanitizeData(JSON.parse(old));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+            return migrated;
+          }
+        }
+      } catch (e) {
+        console.warn('Storage load error, falling back to default:', e);
+      }
+      return getDefaultData();
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      } catch (e) {
+        showToast('保存に失敗しました（端末容量を確認してください）');
+      }
+    }
+
+    /* ========================
+       Application State
+       ======================== */
+    const state = {
+      data: loadData(),
+      activeTab: 'record',      // 'record' | 'analytics' | 'history' | 'settings'
+      activePillar: 'basic',    // 'basic' | 'scale' | 'etude'
+      selectedDate: todayStr(),
+      editMode: false,
+      activeEtudeBookId: null,  // Level 2 Etude Number Grid ID
+      calendarMonth: (() => {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() };
+      })(),
+      calendarSelectedDate: todayStr(),
+      // Active Log Modal Draft
+      logDraft: null,
+      // Timer state inside log modal
+      timer: {
+        running: false,
+        startedAt: 0,
+        accumulatedMs: 0,
+        intervalId: null
+      },
+      // Undo buffer
+      lastDeletedMenu: null,
+      toastTimerId: null,
+      // Pending confirm callback
+      confirmCallback: null,
+      // Drag / Flick reorder state
+      drag: null
+    };
+
+    /* ========================
+       Key Signature SVG Builder
+       (Zero font-glyph dependency: pure vector paths!)
+       ======================== */
+    // Accurate staff Y positions (staff lines: 11, 16, 21, 26, 31)
+    const SHARP_YS = [11, 18.5, 8.5, 16, 23.5, 13.5]; // F5, C5, G5, D5, A4, E5
+    const FLAT_YS  = [21, 13.5, 23.5, 16, 26, 18.5];  // B4, E5, A4, D5, G4, C5
+
+    function svgStaffLines(x1, x2, stroke) {
+      const ys = [11, 16, 21, 26, 31];
+      return ys.map(y => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${stroke}" stroke-width="0.85" />`).join('');
+    }
+
+    function svgTrebleClef(x, color) {
+      // Crisp stylized treble clef anchored around staff lines 11..31 (G-curl around y=26)
+      return `
+        <g transform="translate(${x}, 0)" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 6.2 35.5 C 4.2 36.2 3.2 34.4 4.4 33.4 C 5.5 32.5 7.2 33.6 6.8 35.0 C 6.6 35.8 7.5 35.5 7.7 33.8 L 8.9 7.2 C 9.0 4.6 7.0 3.8 5.9 5.5 C 4.8 7.2 5.6 11.2 8.2 14.2 C 10.6 17.0 3.0 20.8 3.2 26.2 C 3.4 30.2 6.8 31.6 9.6 30.3 C 12.2 29.0 12.6 25.4 10.4 23.6 C 8.4 22.0 5.9 23.3 6.0 25.6 C 6.1 27.3 7.4 28.0 8.5 27.6" stroke-width="1.45" />
+        </g>`;
+    }
+
+    function svgSharp(x, y, color) {
+      return `
+        <g transform="translate(${x}, ${y})" stroke="${color}" stroke-linecap="round">
+          <line x1="-1.5" y1="-4.6" x2="-1.5" y2="4.8" stroke-width="0.95" />
+          <line x1="1.6"  y1="-5.2" x2="1.6"  y2="4.2" stroke-width="0.95" />
+          <line x1="-3.3" y1="-1.2" x2="3.4"  y2="-2.4" stroke-width="1.35" />
+          <line x1="-3.3" y1="2.2"  x2="3.4"  y2="1.0"  stroke-width="1.35" />
+        </g>`;
+    }
+
+    function svgFlat(x, y, color) {
+      return `
+        <g transform="translate(${x}, ${y})" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="-1.6" y1="-6.8" x2="-1.6" y2="2.8" stroke-width="1.05" />
+          <path d="M -1.6 -0.8 C 1.8 -2.8 3.2 -0.2 1.8 1.5 C 0.8 2.6 -0.6 2.9 -1.6 2.8" stroke-width="1.15" />
+        </g>`;
+    }
+
+    function buildKeySignatureSvg(scale) {
+      const isMajor = scale.mode === 'major';
+      const ink = isMajor ? '#e8c75e' : '#70d4ca';
+      const staffColor = 'rgba(255,255,255,0.26)';
+
+      // Special diagonal slash split for ♯6 / ♭6 keeping identical 116x42 box!
+      if (scale.accType === 'both6') {
+        const sharpNotes = SHARP_YS.map((y, i) => svgSharp(22 + i * 9.5, y, ink)).join('');
+        const flatNotes  = FLAT_YS.map((y, i) => svgFlat(22 + i * 9.5, y, ink)).join('');
+        return `
+          <svg viewBox="0 0 116 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <g transform="translate(1, -1.5) scale(0.57)">
+              ${svgStaffLines(2, 82, staffColor)}
+              ${svgTrebleClef(3, ink)}
+              ${sharpNotes}
+            </g>
+            <line x1="65" y1="3" x2="51" y2="39" stroke="rgba(255,255,255,0.34)" stroke-width="1.2" stroke-linecap="round" />
+            <g transform="translate(60, 17.5) scale(0.57)">
+              ${svgStaffLines(2, 82, staffColor)}
+              ${svgTrebleClef(3, ink)}
+              ${flatNotes}
+            </g>
+          </svg>`;
+      }
+
+      // Standard single staff (C / a has NO natural symbol!)
+      let accs = '';
+      if (scale.accType === 'sharp') {
+        for (let i = 0; i < scale.accCount; i++) {
+          accs += svgSharp(30 + i * 11.5, SHARP_YS[i], ink);
+        }
+      } else if (scale.accType === 'flat') {
+        for (let i = 0; i < scale.accCount; i++) {
+          accs += svgFlat(30 + i * 11.5, FLAT_YS[i], ink);
+        }
+      }
+
+      return `
+        <svg viewBox="0 0 116 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          ${svgStaffLines(5, 111, staffColor)}
+          ${svgTrebleClef(8, ink)}
+          ${accs}
+        </svg>`;
+    }
+
+    /* ========================
+       Stats Computation Helpers
+       ======================== */
+    function getLogsForDate(dateStr) {
+      return state.data.logs
+        .filter(l => l.date === dateStr)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+
+    function getItemStats(category, itemId, etudeNum) {
+      const matched = state.data.logs.filter(l => {
+        if (l.category !== category || l.itemId !== itemId) return false;
+        if (etudeNum !== undefined && etudeNum !== null) {
+          return Number(l.etudeNum) === Number(etudeNum);
+        }
+        return true;
+      });
+
+      if (matched.length === 0) {
+        return { count: 0, lastDate: null, lastBpm: null, maxBpm: null, lastDuration: null, elapsedDays: null };
+      }
+
+      matched.sort((a, b) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date);
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+
+      const latest = matched[0];
+      let lastBpm = null;
+      let maxBpm = null;
+      for (const l of matched) {
+        if (l.bpm !== null && l.bpm !== undefined) {
+          if (lastBpm === null) lastBpm = l.bpm;
+          if (maxBpm === null || l.bpm > maxBpm) maxBpm = l.bpm;
+        }
+      }
+
+      return {
+        count: matched.length,
+        lastDate: latest.date,
+        lastBpm,
+        maxBpm,
+        lastDuration: latest.duration,
+        elapsedDays: diffDays(latest.date, todayStr())
+      };
+    }
+
+    function getEtudeBookSummary(book) {
+      const total = book.hasNumbers ? (book.endNum - book.startNum + 1) : 1;
+      const practicedSet = new Set();
+      let unreachedCount = 0;
+      let lastLog = null;
+
+      const bookLogs = state.data.logs
+        .filter(l => l.category === 'etude' && l.itemId === book.id)
+        .sort((a, b) => (a.date !== b.date ? b.date.localeCompare(a.date) : (b.createdAt || 0) - (a.createdAt || 0)));
+
+      if (bookLogs.length > 0) lastLog = bookLogs[0];
+
+      if (book.hasNumbers) {
+        for (let n = book.startNum; n <= book.endNum; n++) {
+          const st = getItemStats('etude', book.id, n);
+          if (st.count > 0) practicedSet.add(n);
+          const tBpm = state.data.etudeTargets[etudeTargetKey(book.id, n)] || null;
+          if (tBpm && (st.lastBpm === null || st.lastBpm < tBpm)) {
+            unreachedCount++;
+          }
+        }
+      } else {
+        const st = getItemStats('etude', book.id, null);
+        if (st.count > 0) practicedSet.add(1);
+        const tBpm = state.data.etudeTargets[etudeTargetKey(book.id, null)] || null;
+        if (tBpm && (st.lastBpm === null || st.lastBpm < tBpm)) {
+          unreachedCount = 1;
+        }
+      }
+
+      return {
+        total,
+        practicedCount: practicedSet.size,
+        unreachedCount,
+        lastLog,
+        elapsedDays: lastLog ? diffDays(lastLog.date, todayStr()) : null
+      };
+    }
+
+    function isDoneOnDate(dateStr, category, itemId, etudeNum) {
+      return state.data.logs.some(l =>
+        l.date === dateStr &&
+        l.category === category &&
+        l.itemId === itemId &&
+        (etudeNum === undefined || etudeNum === null ? true : Number(l.etudeNum) === Number(etudeNum))
+      );
+    }
+
+    /* ========================
+       Toast & Confirm Dialog
+       ======================== */
+    function showToast(message, undoAction) {
+      const container = document.getElementById('toastContainer');
+      if (state.toastTimerId) {
+        clearTimeout(state.toastTimerId);
+        state.toastTimerId = null;
+      }
+      container.innerHTML = `
+        <div class="toast">
+          <span>${escapeHtml(message)}</span>
+          ${undoAction ? `<button type="button" class="toast-undo-btn" data-action="undo-delete-menu">元に戻す</button>` : ''}
+        </div>`;
+      state.toastTimerId = setTimeout(() => {
+        container.innerHTML = '';
+        state.toastTimerId = null;
+      }, undoAction ? 4500 : 2600);
+    }
+
+    function openConfirm(title, message, okLabel, callback) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      document.getElementById('confirmOkBtn').textContent = okLabel || '実行する';
+      state.confirmCallback = callback;
+      openModal('confirmModal');
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('open');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+      if (id === 'logModal') {
+        stopTimerInterval();
+        state.logDraft = null;
+      }
+    }
+
+    /* ========================
+       Timer Logic (Wall-clock accurate!)
+       ======================== */
+    function resetTimerState() {
+      stopTimerInterval();
+      state.timer = { running: false, startedAt: 0, accumulatedMs: 0, intervalId: null };
+    }
+
+    function stopTimerInterval() {
+      if (state.timer.intervalId) {
+        clearInterval(state.timer.intervalId);
+        state.timer.intervalId = null;
+      }
+    }
+
+    function getTimerElapsedMs() {
+      if (!state.timer.running) return state.timer.accumulatedMs;
+      return state.timer.accumulatedMs + Math.max(0, Date.now() - state.timer.startedAt);
+    }
+
+    function formatClock(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function updateTimerDom() {
+      const clockEl = document.getElementById('sheetTimerClock');
+      if (clockEl) {
+        clockEl.textContent = formatClock(getTimerElapsedMs());
+        clockEl.classList.toggle('running', state.timer.running);
+      }
+    }
+
+    function toggleTimerStartStop() {
+      if (!state.timer.running) {
+        state.timer.running = true;
+        state.timer.startedAt = Date.now();
+        stopTimerInterval();
+        state.timer.intervalId = setInterval(updateTimerDom, 250);
+        renderLogSheetTimerArea();
+      } else {
+        // Stop and apply elapsed minutes to duration
+        const elapsedMs = getTimerElapsedMs();
+        state.timer.accumulatedMs = elapsedMs;
+        state.timer.running = false;
+        stopTimerInterval();
+        const mins = Math.max(1, Math.round(elapsedMs / 60000));
+        if (state.logDraft) {
+          state.logDraft.duration = mins;
+          const durInput = document.getElementById('sheetDurationInput');
+          if (durInput) durInput.value = mins;
+          updateDurationChipsDom();
+        }
+        renderLogSheetTimerArea();
+        showToast(`タイマー計測（${formatClock(elapsedMs)}）→ ${mins}分を反映しました`);
+      }
+    }
+
+    function resetTimerDisplay() {
+      resetTimerState();
+      renderLogSheetTimerArea();
+    }
+
+    function renderLogSheetTimerArea() {
+      const box = document.getElementById('sheetTimerBox');
+      if (!box) return;
+      const elapsedMs = getTimerElapsedMs();
+      box.innerHTML = `
+        <div class="timer-clock ${state.timer.running ? 'running' : ''}" id="sheetTimerClock">${formatClock(elapsedMs)}</div>
+        <div class="timer-controls">
+          <button type="button" class="btn-mini ${state.timer.running ? 'amber' : 'gold'}" data-action="timer-toggle">
+            ${state.timer.running ? '⏹ 停止して反映' : '▶ タイマー開始'}
+          </button>
+          ${elapsedMs > 0 && !state.timer.running ? `<button type="button" class="btn-mini" data-action="timer-reset">リセット</button>` : ''}
+        </div>`;
+    }
+
+    /* ========================
+       Render Header & Nav
+       ======================== */
+    function renderHeader() {
+      const dateNav = document.getElementById('headerDateNav');
+      const dateLabel = document.getElementById('headerDateLabel');
+      const todayPill = document.getElementById('headerTodayPill');
+
+      if (state.activeTab === 'record') {
+        dateNav.classList.remove('hidden');
+        dateLabel.textContent = formatDisplayDate(state.selectedDate);
+        todayPill.classList.toggle('hidden', state.selectedDate === todayStr());
+      } else {
+        dateNav.classList.add('hidden');
+      }
+
+      document.querySelectorAll('#bottomNav .nav-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === state.activeTab);
+      });
+    }
+
+    /* ========================
+       Render Main Views
+       ======================== */
+    function render() {
+      renderHeader();
+      const main = document.getElementById('mainView');
+      if (state.activeTab === 'record') {
+        main.innerHTML = renderRecordView();
+      } else if (state.activeTab === 'analytics') {
+        main.innerHTML = renderAnalyticsView();
+      } else if (state.activeTab === 'history') {
+        main.innerHTML = renderHistoryView();
+      } else {
+        main.innerHTML = renderSettingsView();
+      }
+    }
+
+    function renderRecordView() {
+      const dayLogs = getLogsForDate(state.selectedDate);
+      const totalMin = dayLogs.reduce((sum, l) => sum + (Number(l.duration) || 0), 0);
+      const cntBasic = dayLogs.filter(l => l.category === 'basic').length;
+      const cntScale = dayLogs.filter(l => l.category === 'scale').length;
+      const cntEtude = dayLogs.filter(l => l.category === 'etude').length;
+
+      let pillarContent = '';
+      if (state.activePillar === 'basic') {
+        pillarContent = renderBasicsSection();
+      } else if (state.activePillar === 'scale') {
+        pillarContent = renderScalesSection();
+      } else {
+        pillarContent = renderEtudesSection();
+      }
+
+      const logsHtml = dayLogs.length === 0
+        ? `<div class="empty-state">この日の記録はまだありません。上のメニューをタップして記録しましょう。</div>`
+        : dayLogs.map(l => renderLogRow(l)).join('');
+
+      return `
+        <div class="summary-strip">
+          <div class="summary-total">
+            <span class="summary-total-label">${state.selectedDate === todayStr() ? '今日の合計練習時間' : `${formatDisplayDate(state.selectedDate)} の合計`}</span>
+            <span class="summary-total-val">${totalMin}<small>分</small></span>
+          </div>
+          <div class="summary-badges">
+            <span class="pill-stat ${cntBasic ? 'active-basic' : ''}">基礎 ${cntBasic}</span>
+            <span class="pill-stat ${cntScale ? 'active-scale' : ''}">スケール ${cntScale}</span>
+            <span class="pill-stat ${cntEtude ? 'active-etude' : ''}">エチュード ${cntEtude}</span>
+          </div>
+        </div>
+
+        <div class="segment-bar">
+          <button type="button" class="segment-btn ${state.activePillar === 'basic' ? 'active' : ''}" data-action="switch-pillar" data-pillar="basic">基礎練習</button>
+          <button type="button" class="segment-btn ${state.activePillar === 'scale' ? 'active' : ''}" data-action="switch-pillar" data-pillar="scale">スケール 24調</button>
+          <button type="button" class="segment-btn ${state.activePillar === 'etude' ? 'active' : ''}" data-action="switch-pillar" data-pillar="etude">エチュード</button>
+        </div>
+
+        ${pillarContent}
+
+        <div class="log-list-card">
+          <div class="section-head" style="margin-bottom:4px;">
+            <div class="section-title">記録一覧（${dayLogs.length}件）</div>
+          </div>
+          ${logsHtml}
+        </div>`;
+    }
+
+    function renderBasicsSection() {
+      const editing = state.editMode;
+      const cards = state.data.basics.map((item, idx) => {
+        const st = getItemStats('basic', item.id);
+        const done = isDoneOnDate(state.selectedDate, 'basic', item.id);
+        const elapsedClass = st.elapsedDays === 0 ? 'today' : (st.elapsedDays === null || st.elapsedDays >= 3 ? 'warn' : '');
+        const bpmText = st.lastBpm ? `♩=${st.lastBpm}` : (item.defaultBpm ? `目安 ♩=${item.defaultBpm}` : 'テンポなし');
+
+        return `
+          <div class="menu-card ${done ? 'done-today' : ''} ${editing ? 'editing' : ''}"
+               data-action="${editing ? '' : 'open-log'}"
+               data-category="basic"
+               data-id="${escapeHtml(item.id)}"
+               data-reorder-list="basics"
+               data-index="${idx}"
+               role="button" tabindex="0">
+            ${editing ? `<span class="card-grip">⋮⋮</span><button type="button" class="card-del-btn" data-action="delete-menu" data-list="basics" data-id="${escapeHtml(item.id)}" aria-label="削除">×</button>` : ''}
+            <div class="card-top-row">
+              <div class="card-title">${escapeHtml(item.name)}</div>
+              ${done && !editing ? `<span class="done-check">✓</span>` : ''}
+            </div>
+            <div class="card-meta">
+              <span class="bpm-chip">${bpmText}</span>
+              <span class="elapsed-chip ${elapsedClass}">${formatElapsedLabel(st.elapsedDays)}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="section-head">
+          <div class="section-title">基礎練習メニュー</div>
+          <div class="section-actions">
+            ${editing
+              ? `<button type="button" class="btn-mini gold" data-action="open-add-menu" data-category="basic">＋ 追加</button>
+                 <button type="button" class="btn-mini primary" data-action="toggle-edit-mode">編集完了</button>`
+              : `<button type="button" class="btn-mini" data-action="toggle-edit-mode">メニュー編集</button>`}
+          </div>
+        </div>
+        ${editing ? `<div class="edit-hint"><span>カードをドラッグまたはフリックで並び替え・右上の×で削除</span></div>` : ''}
+        <div class="menu-grid" id="reorderContainer">${cards || `<div class="empty-state" style="grid-column:span 2;">メニューがありません。「メニュー編集」→「＋ 追加」から登録できます。</div>`}</div>`;
+    }
+
+    function renderScalesSection() {
+      const sort = state.data.ui.scaleSort;
+      const filter = state.data.ui.scaleFilter;
+
+      const sortFn = (a, b) => sort === 'chromatic' ? (a.chroma - b.chroma) : (a.fifth - b.fifth);
+      const majors = SCALES.filter(s => s.mode === 'major').sort(sortFn);
+      const minors = SCALES.filter(s => s.mode === 'minor').sort(sortFn);
+
+      const renderTile = (s) => {
+        const st = getItemStats('scale', s.id);
+        const done = isDoneOnDate(state.selectedDate, 'scale', s.id);
+        const isCompact = s.accType === 'both6';
+        const bpmStr = st.lastBpm ? `♩${st.lastBpm}` : '—';
+        const elapsedStr = st.elapsedDays === null ? '未' : (st.elapsedDays === 0 ? '今日' : `${st.elapsedDays}日前`);
+
+        return `
+          <button type="button" class="scale-tile ${s.mode} ${done ? 'done-today' : ''}" data-action="open-log" data-category="scale" data-id="${s.id}">
+            <div class="scale-tile-head">
+              <span class="scale-key-name ${isCompact ? 'compact' : ''}">${s.name}</span>
+              <span class="scale-acc-badge ${isCompact ? 'compact' : ''}">${s.badge}</span>
+            </div>
+            <div class="scale-staff-box">${buildKeySignatureSvg(s)}</div>
+            <div class="scale-tile-foot">
+              <span>${bpmStr}</span>
+              <span>${elapsedStr}</span>
+            </div>
+          </button>`;
+      };
+
+      return `
+        <div class="scale-toolbar">
+          <div class="section-actions">
+            <button type="button" class="btn-mini ${sort === 'fifths' ? 'active' : ''}" data-action="set-scale-sort" data-sort="fifths">五度圏順</button>
+            <button type="button" class="btn-mini ${sort === 'chromatic' ? 'active' : ''}" data-action="set-scale-sort" data-sort="chromatic">半音階順</button>
+          </div>
+          <div class="section-actions">
+            <button type="button" class="btn-mini ${filter === 'all' ? 'active' : ''}" data-action="set-scale-filter" data-filter="all">全24</button>
+            <button type="button" class="btn-mini ${filter === 'major' ? 'gold' : ''}" data-action="set-scale-filter" data-filter="major">長調</button>
+            <button type="button" class="btn-mini ${filter === 'minor' ? 'teal' : ''}" data-action="set-scale-filter" data-filter="minor">短調</button>
+          </div>
+        </div>
+        ${filter !== 'minor' ? `
+          <div class="scale-group-label major">MAJOR（長調・大文字）</div>
+          <div class="scale-grid">${majors.map(renderTile).join('')}</div>` : ''}
+        ${filter !== 'major' ? `
+          <div class="scale-group-label minor">minor（短調・小文字）</div>
+          <div class="scale-grid">${minors.map(renderTile).join('')}</div>` : ''}`;
+    }
+
+    function renderEtudesSection() {
+      // Level 2: Number Grid View for selected numbered etude book
+      if (state.activeEtudeBookId) {
+        const book = state.data.etudes.find(e => e.id === state.activeEtudeBookId);
+        if (book && book.hasNumbers) {
+          return renderEtudeNumberGrid(book);
+        } else {
+          state.activeEtudeBookId = null;
+        }
+      }
+
+      // Level 1: Etude Books List
+      const editing = state.editMode;
+      const cards = state.data.etudes.map((book, idx) => {
+        const summary = getEtudeBookSummary(book);
+        const doneToday = isDoneOnDate(state.selectedDate, 'etude', book.id);
+
+        if (book.hasNumbers) {
+          const pct = Math.round((summary.practicedCount / Math.max(1, summary.total)) * 100);
+          const lastText = summary.lastLog
+            ? `前回 No.${summary.lastLog.etudeNum} (${formatElapsedLabel(summary.elapsedDays)})`
+            : 'まだ記録がありません';
+
+          return `
+            <div class="menu-card etude-book-card ${doneToday ? 'done-today' : ''} ${editing ? 'editing' : ''}"
+                 data-action="${editing ? '' : 'open-etude-book'}"
+                 data-id="${escapeHtml(book.id)}"
+                 data-reorder-list="etudes"
+                 data-index="${idx}"
+                 role="button" tabindex="0">
+              ${editing ? `<span class="card-grip">⋮⋮</span><button type="button" class="card-del-btn" data-action="delete-menu" data-list="etudes" data-id="${escapeHtml(book.id)}" aria-label="削除">×</button>` : ''}
+              <div class="card-top-row">
+                <div class="card-title">${escapeHtml(book.name)}</div>
+                ${!editing ? `<span class="badge-mini gold">${book.startNum}〜${book.endNum}番 ›</span>` : ''}
+              </div>
+              <div class="etude-progress-wrap">
+                <div class="etude-progress-bar"><div class="etude-progress-fill" style="width:${pct}%"></div></div>
+                <div class="etude-badges">
+                  <span class="badge-mini">${summary.practicedCount} / ${summary.total} 済</span>
+                  ${summary.unreachedCount > 0 ? `<span class="badge-mini warn">目標未達 ${summary.unreachedCount}</span>` : ''}
+                  <span class="badge-mini">${lastText}</span>
+                </div>
+              </div>
+            </div>`;
+        } else {
+          const st = getItemStats('etude', book.id, null);
+          const tBpm = state.data.etudeTargets[etudeTargetKey(book.id, null)] || null;
+          const isUnreached = tBpm && (st.lastBpm === null || st.lastBpm < tBpm);
+          const bpmText = tBpm
+            ? `♩=${st.lastBpm ?? '--'} / 目標 ${tBpm}`
+            : (st.lastBpm ? `♩=${st.lastBpm}` : `目安 ♩=${book.defaultBpm}`);
+          const elapsedClass = st.elapsedDays === 0 ? 'today' : (st.elapsedDays === null || st.elapsedDays >= 3 ? 'warn' : '');
+
+          return `
+            <div class="menu-card etude-book-card ${doneToday ? 'done-today' : ''} ${editing ? 'editing' : ''}"
+                 data-action="${editing ? '' : 'open-log'}"
+                 data-category="etude"
+                 data-id="${escapeHtml(book.id)}"
+                 data-reorder-list="etudes"
+                 data-index="${idx}"
+                 role="button" tabindex="0">
+              ${editing ? `<span class="card-grip">⋮⋮</span><button type="button" class="card-del-btn" data-action="delete-menu" data-list="etudes" data-id="${escapeHtml(book.id)}" aria-label="削除">×</button>` : ''}
+              <div class="card-top-row">
+                <div class="card-title">${escapeHtml(book.name)}</div>
+                ${doneToday && !editing ? `<span class="done-check">✓</span>` : `<span class="badge-mini">単体</span>`}
+              </div>
+              <div class="card-meta" style="margin-top:6px;">
+                <span class="bpm-chip" style="${isUnreached ? 'color:#fbbf24;' : ''}">${bpmText}</span>
+                <span class="elapsed-chip ${elapsedClass}">${formatElapsedLabel(st.elapsedDays)}</span>
+              </div>
+            </div>`;
+        }
+      }).join('');
+
+      return `
+        <div class="section-head">
+          <div class="section-title">エチュード教本</div>
+          <div class="section-actions">
+            ${editing
+              ? `<button type="button" class="btn-mini gold" data-action="open-add-menu" data-category="etude">＋ 追加</button>
+                 <button type="button" class="btn-mini primary" data-action="toggle-edit-mode">編集完了</button>`
+              : `<button type="button" class="btn-mini" data-action="toggle-edit-mode">メニュー編集</button>`}
+          </div>
+        </div>
+        ${editing ? `<div class="edit-hint"><span>ドラッグ／フリックで順番を変更・右上の×で削除できます</span></div>` : ''}
+        <div class="menu-grid" id="reorderContainer">${cards || `<div class="empty-state" style="grid-column:span 2;">エチュードがありません。「メニュー編集」→「＋ 追加」から登録できます。</div>`}</div>`;
+    }
+
+    function renderEtudeNumberGrid(book) {
+      const summary = getEtudeBookSummary(book);
+      const filter = state.data.ui.etudeNumberFilter;
+
+      const items = [];
+      for (let n = book.startNum; n <= book.endNum; n++) {
+        const st = getItemStats('etude', book.id, n);
+        const tBpm = state.data.etudeTargets[etudeTargetKey(book.id, n)] || null;
+        const doneToday = isDoneOnDate(state.selectedDate, 'etude', book.id, n);
+        const isUnreached = Boolean(tBpm && (st.lastBpm === null || st.lastBpm < tBpm));
+        const isReached = Boolean(tBpm && st.lastBpm !== null && st.lastBpm >= tBpm);
+        items.push({ num: n, st, tBpm, doneToday, isUnreached, isReached });
+      }
+
+      let filtered = items;
+      if (filter === 'unreached') {
+        filtered = items.filter(it => it.isUnreached);
+      } else if (filter === 'review') {
+        filtered = items
+          .filter(it => it.st.count > 0)
+          .sort((a, b) => (b.st.elapsedDays ?? 0) - (a.st.elapsedDays ?? 0));
+      } else if (filter === 'untouched') {
+        filtered = items.filter(it => it.st.count === 0);
+      }
+
+      const tilesHtml = filtered.length === 0
+        ? `<div class="empty-state" style="grid-column:1/-1;">該当する曲番号はありません。</div>`
+        : filtered.map(it => {
+            const cls = [
+              'num-tile',
+              it.st.count > 0 ? 'practiced' : '',
+              it.isUnreached ? 'target-unreached' : '',
+              it.isReached ? 'target-reached' : '',
+              it.doneToday ? 'done-today' : ''
+            ].filter(Boolean).join(' ');
+
+            let bpmLabel = '未';
+            if (it.tBpm) {
+              bpmLabel = `${it.st.lastBpm ?? '-'}/${it.tBpm}`;
+            } else if (it.st.lastBpm) {
+              bpmLabel = `♩${it.st.lastBpm}`;
+            } else if (it.st.count > 0) {
+              bpmLabel = '済';
+            }
+
+            const daysLabel = it.st.elapsedDays === null
+              ? '—'
+              : (it.st.elapsedDays === 0 ? '今日' : `${it.st.elapsedDays}日前`);
+
+            return `
+              <button type="button" class="${cls}" data-action="open-log" data-category="etude" data-id="${escapeHtml(book.id)}" data-num="${it.num}">
+                ${it.doneToday ? '<span class="num-dot-today"></span>' : ''}
+                <span class="num-tile-no">${it.num}</span>
+                <span class="num-tile-bpm">${bpmLabel}</span>
+                <span class="num-tile-days">${daysLabel}</span>
+              </button>`;
+          }).join('');
+
+      return `
+        <div class="etude-sub-header">
+          <div class="etude-sub-top">
+            <button type="button" class="back-btn" data-action="close-etude-book">← エチュード一覧</button>
+            <div class="etude-badges">
+              <span class="badge-mini">${summary.practicedCount}/${summary.total}済</span>
+              ${summary.unreachedCount > 0 ? `<span class="badge-mini warn">未達 ${summary.unreachedCount}</span>` : ''}
+            </div>
+          </div>
+          <div class="etude-sub-title">${escapeHtml(book.name)}</div>
+          <div class="etude-progress-bar" style="margin-bottom:0;">
+            <div class="etude-progress-fill" style="width:${Math.round((summary.practicedCount / Math.max(1, summary.total)) * 100)}%"></div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <button type="button" class="filter-pill ${filter === 'all' ? 'active' : ''}" data-action="set-etude-filter" data-filter="all">すべて (${summary.total})</button>
+          <button type="button" class="filter-pill ${filter === 'unreached' ? 'active-amber' : ''}" data-action="set-etude-filter" data-filter="unreached">目標未達 (${summary.unreachedCount})</button>
+          <button type="button" class="filter-pill ${filter === 'review' ? 'active' : ''}" data-action="set-etude-filter" data-filter="review">周回(久々)</button>
+          <button type="button" class="filter-pill ${filter === 'untouched' ? 'active' : ''}" data-action="set-etude-filter" data-filter="untouched">未着手</button>
+        </div>
+
+        <div class="etude-num-grid">${tilesHtml}</div>`;
+    }
+
+    function renderLogRow(l) {
+      const displayName = l.category === 'etude' && l.etudeNum !== null
+        ? `${l.itemName} No.${l.etudeNum}`
+        : l.itemName;
+      const tBpm = l.targetBpm || (l.category === 'etude' ? state.data.etudeTargets[etudeTargetKey(l.itemId, l.etudeNum)] : null);
+      const bpmChip = l.bpm
+        ? (tBpm ? `♩=${l.bpm} / 目標 ${tBpm}` : `♩=${l.bpm}`)
+        : 'テンポなし';
+      const tagsHtml = (l.tags && l.tags.length)
+        ? l.tags.map(t => `<span class="badge-mini" style="font-size:10px;">${escapeHtml(t)}</span>`).join('')
+        : '';
+
+      return `
+        <div class="log-item">
+          <div class="log-main">
+            <div class="log-title-line">
+              <span class="cat-dot ${l.category}"></span>
+              <span class="log-name">${escapeHtml(displayName)}</span>
+              ${tagsHtml}
+            </div>
+            <div class="log-meta-line">
+              <span style="color:var(--gold-bright);font-weight:700;">${bpmChip}</span>
+              <span>${l.duration}分</span>
+            </div>
+            ${l.memo ? `<div class="log-memo">${escapeHtml(l.memo)}</div>` : ''}
+          </div>
+          <div class="log-actions">
+            <button type="button" class="icon-btn" data-action="edit-log" data-log-id="${escapeHtml(l.id)}" aria-label="編集">✎</button>
+            <button type="button" class="icon-btn danger" data-action="delete-log" data-log-id="${escapeHtml(l.id)}" aria-label="削除">🗑</button>
+          </div>
+        </div>`;
+    }
+
+    /* ========================
+       Render Analytics View
+       ======================== */
+    function renderAnalyticsView() {
+      const period = state.data.ui.analyticsPeriod;
+      const cutoff = addDays(todayStr(), -(period - 1));
+      const periodLogs = state.data.logs.filter(l => l.date >= cutoff && l.date <= todayStr());
+
+      const minBasic = periodLogs.filter(l => l.category === 'basic').reduce((s, l) => s + l.duration, 0);
+      const minScale = periodLogs.filter(l => l.category === 'scale').reduce((s, l) => s + l.duration, 0);
+      const minEtude = periodLogs.filter(l => l.category === 'etude').reduce((s, l) => s + l.duration, 0);
+      const totalMin = minBasic + minScale + minEtude;
+
+      const pctB = totalMin ? Math.round((minBasic / totalMin) * 100) : 0;
+      const pctS = totalMin ? Math.round((minScale / totalMin) * 100) : 0;
+      const pctE = totalMin ? Math.max(0, 100 - pctB - pctS) : 0;
+
+      // 1. Target-Unreached Etudes Pickup
+      const unreachedList = [];
+      state.data.etudes.forEach(book => {
+        if (book.hasNumbers) {
+          for (let n = book.startNum; n <= book.endNum; n++) {
+            const tBpm = state.data.etudeTargets[etudeTargetKey(book.id, n)];
+            if (!tBpm) continue;
+            const st = getItemStats('etude', book.id, n);
+            if (st.lastBpm === null || st.lastBpm < tBpm) {
+              unreachedList.push({
+                bookId: book.id,
+                name: `${book.name} No.${n}`,
+                num: n,
+                lastBpm: st.lastBpm,
+                targetBpm: tBpm,
+                gap: tBpm - (st.lastBpm || 0),
+                elapsedDays: st.elapsedDays
+              });
+            }
+          }
+        } else {
+          const tBpm = state.data.etudeTargets[etudeTargetKey(book.id, null)];
+          if (tBpm) {
+            const st = getItemStats('etude', book.id, null);
+            if (st.lastBpm === null || st.lastBpm < tBpm) {
+              unreachedList.push({
+                bookId: book.id,
+                name: book.name,
+                num: null,
+                lastBpm: st.lastBpm,
+                targetBpm: tBpm,
+                gap: tBpm - (st.lastBpm || 0),
+                elapsedDays: st.elapsedDays
+              });
+            }
+          }
+        }
+      });
+      unreachedList.sort((a, b) => (b.elapsedDays ?? 999) - (a.elapsedDays ?? 999));
+
+      // 2. Neglected Ranking (Basics >=3d or unpracticed + Started Etude numbers >=5d + Books >=4d)
+      const neglected = [];
+      state.data.basics.forEach(b => {
+        const st = getItemStats('basic', b.id);
+        if (st.elapsedDays === null || st.elapsedDays >= 3) {
+          neglected.push({
+            category: 'basic', itemId: b.id, etudeNum: null,
+            name: b.name, sub: '基礎練習', elapsedDays: st.elapsedDays,
+            score: st.elapsedDays === null ? 9999 : st.elapsedDays
+          });
+        }
+      });
+
+      state.data.etudes.forEach(book => {
+        if (book.hasNumbers) {
+          // Only include started numbers to avoid spamming untouched numbers
+          const startedNums = [];
+          for (let n = book.startNum; n <= book.endNum; n++) {
+            const st = getItemStats('etude', book.id, n);
+            if (st.count > 0 && st.elapsedDays >= 4) {
+              startedNums.push({ n, st });
+            }
+          }
+          startedNums.sort((a, b) => b.st.elapsedDays - a.st.elapsedDays);
+          startedNums.slice(0, 3).forEach(({ n, st }) => {
+            neglected.push({
+              category: 'etude', itemId: book.id, etudeNum: n,
+              name: `${book.name} No.${n}`, sub: 'エチュード周回',
+              elapsedDays: st.elapsedDays, score: st.elapsedDays
+            });
+          });
+        } else {
+          const st = getItemStats('etude', book.id, null);
+          if (st.elapsedDays === null || st.elapsedDays >= 3) {
+            neglected.push({
+              category: 'etude', itemId: book.id, etudeNum: null,
+              name: book.name, sub: 'エチュード',
+              elapsedDays: st.elapsedDays, score: st.elapsedDays === null ? 9998 : st.elapsedDays
+            });
+          }
+        }
+      });
+      neglected.sort((a, b) => b.score - a.score);
+
+      // 3. 24-Scale Coverage Map
+      const renderCovCells = (mode) => SCALES.filter(s => s.mode === mode).map(s => {
+        const st = getItemStats('scale', s.id);
+        let lv = '';
+        if (st.elapsedDays !== null) {
+          if (st.elapsedDays <= 2) lv = 'lv3';
+          else if (st.elapsedDays <= 7) lv = 'lv2';
+          else lv = 'lv1';
+        }
+        const sub = st.elapsedDays === null ? '未' : (st.elapsedDays === 0 ? '今日' : `${st.elapsedDays}d`);
+        return `
+          <button type="button" class="cov-cell ${mode} ${lv}" data-action="open-log" data-category="scale" data-id="${s.id}">
+            <span class="cov-key ${s.accType === 'both6' ? 'compact' : ''}">${s.name}</span>
+            <span class="cov-sub">${sub}</span>
+          </button>`;
+      }).join('');
+
+      // 4. BPM Summary (Basics + Active Etudes)
+      const bpmRows = [];
+      state.data.basics.forEach(b => {
+        const st = getItemStats('basic', b.id);
+        if (st.lastBpm || st.maxBpm) {
+          bpmRows.push({ name: b.name, cat: 'basic', last: st.lastBpm, max: st.maxBpm, target: null, id: b.id, num: null });
+        }
+      });
+      state.data.etudes.forEach(book => {
+        if (book.hasNumbers) {
+          for (let n = book.startNum; n <= book.endNum; n++) {
+            const st = getItemStats('etude', book.id, n);
+            if (st.lastBpm || st.maxBpm) {
+              bpmRows.push({
+                name: `${book.name} No.${n}`, cat: 'etude',
+                last: st.lastBpm, max: st.maxBpm,
+                target: state.data.etudeTargets[etudeTargetKey(book.id, n)] || null,
+                id: book.id, num: n
+              });
+            }
+          }
+        } else {
+          const st = getItemStats('etude', book.id, null);
+          if (st.lastBpm || st.maxBpm) {
+            bpmRows.push({
+              name: book.name, cat: 'etude', last: st.lastBpm, max: st.maxBpm,
+              target: state.data.etudeTargets[etudeTargetKey(book.id, null)] || null,
+              id: book.id, num: null
+            });
+          }
+        }
+      });
+
+      return `
+        <div class="card-panel">
+          <div class="panel-title">
+            <span>三本柱の練習時間バランス</span>
+            <div class="section-actions">
+              <button type="button" class="btn-mini ${period === 7 ? 'active' : ''}" data-action="set-analytics-period" data-period="7">7日</button>
+              <button type="button" class="btn-mini ${period === 30 ? 'active' : ''}" data-action="set-analytics-period" data-period="30">30日</button>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-sub);">
+            合計 <strong style="color:var(--gold-bright);font-size:18px;">${totalMin}</strong> 分（${periodLogs.length}件）
+          </div>
+          <div class="stacked-bar">
+            <div class="bar-seg basic" style="width:${pctB}%"></div>
+            <div class="bar-seg scale" style="width:${pctS}%"></div>
+            <div class="bar-seg etude" style="width:${pctE}%"></div>
+          </div>
+          <div class="legend-grid">
+            <div class="legend-box">
+              <div class="legend-label">基礎練習</div>
+              <div class="legend-val" style="color:var(--gold-bright);">${minBasic}分</div>
+              <div class="legend-pct">${pctB}%</div>
+            </div>
+            <div class="legend-box">
+              <div class="legend-label">スケール</div>
+              <div class="legend-val" style="color:var(--teal-bright);">${minScale}分</div>
+              <div class="legend-pct">${pctS}%</div>
+            </div>
+            <div class="legend-box">
+              <div class="legend-label">エチュード</div>
+              <div class="legend-val" style="color:#fbbf24;">${minEtude}分</div>
+              <div class="legend-pct">${pctE}%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-title">
+            <span>🎯 インテンポ未達エチュード</span>
+            <span class="badge-mini ${unreachedList.length ? 'warn' : 'green'}">${unreachedList.length}曲</span>
+          </div>
+          ${unreachedList.length === 0
+            ? `<div class="empty-state" style="padding:12px;">目標テンポ未達の曲はありません。エチュード記録時に目標BPMを入れるとここに自動表示されます。</div>`
+            : `<div class="rank-list">
+                ${unreachedList.slice(0, 8).map(it => `
+                  <button type="button" class="rank-row" data-action="open-log" data-category="etude" data-id="${escapeHtml(it.bookId)}" data-num="${it.num ?? ''}">
+                    <div class="rank-left">
+                      <span class="rank-name">${escapeHtml(it.name)}</span>
+                      <span class="rank-sub">前回 ${it.lastBpm ? `♩=${it.lastBpm}` : '未記録'} → 目標 ♩=${it.targetBpm}（あと +${it.gap}）</span>
+                    </div>
+                    <span class="badge-mini warn">${formatElapsedLabel(it.elapsedDays)}</span>
+                  </button>`).join('')}
+               </div>`}
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-title">
+            <span>⚠️ サボりがち・周回ピックアップ</span>
+            <span class="badge-mini">タップで記録</span>
+          </div>
+          ${neglected.length === 0
+            ? `<div class="empty-state" style="padding:12px;">直近で偏りなく練習できています！</div>`
+            : `<div class="rank-list">
+                ${neglected.slice(0, 8).map(it => `
+                  <button type="button" class="rank-row" data-action="open-log" data-category="${it.category}" data-id="${escapeHtml(it.itemId)}" data-num="${it.etudeNum ?? ''}">
+                    <div class="rank-left">
+                      <span class="rank-name"><span class="cat-dot ${it.category}"></span>${escapeHtml(it.name)}</span>
+                      <span class="rank-sub">${it.sub}</span>
+                    </div>
+                    <span class="badge-mini warn">${it.elapsedDays === null ? '未実施' : `${it.elapsedDays}日ぶり`}</span>
+                  </button>`).join('')}
+               </div>`}
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-title">
+            <span>🎹 24調カバレッジマップ</span>
+            <span class="badge-mini">濃いほど最近</span>
+          </div>
+          <div style="font-size:11px;color:var(--gold-bright);font-weight:700;margin-bottom:5px;">MAJOR</div>
+          <div class="coverage-grid">${renderCovCells('major')}</div>
+          <div style="font-size:11px;color:var(--teal-bright);font-weight:700;margin:8px 0 5px;">minor</div>
+          <div class="coverage-grid">${renderCovCells('minor')}</div>
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-title"><span>⏱ BPMサマリー（前回 / 最高）</span></div>
+          ${bpmRows.length === 0
+            ? `<div class="empty-state" style="padding:12px;">BPM付きの記録が増えると一覧表示されます。</div>`
+            : `<div class="rank-list">
+                ${bpmRows.slice(0, 12).map(r => `
+                  <button type="button" class="rank-row" data-action="open-log" data-category="${r.cat}" data-id="${escapeHtml(r.id)}" data-num="${r.num ?? ''}">
+                    <div class="rank-left">
+                      <span class="rank-name"><span class="cat-dot ${r.cat}"></span>${escapeHtml(r.name)}</span>
+                      ${r.target ? `<span class="rank-sub">目標 ♩=${r.target}</span>` : ''}
+                    </div>
+                    <span class="badge-mini gold">前回 ${r.last ?? '-'} / 最高 ${r.max ?? '-'}</span>
+                  </button>`).join('')}
+               </div>`}
+        </div>`;
+    }
+
+    /* ========================
+       Render History (Calendar)
+       ======================== */
+    function renderHistoryView() {
+      const { year, month } = state.calendarMonth;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDow = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+
+      // Sum minutes per day in this month
+      const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+      const dayMins = {};
+      state.data.logs.forEach(l => {
+        if (l.date.startsWith(prefix)) {
+          dayMins[l.date] = (dayMins[l.date] || 0) + (Number(l.duration) || 0);
+        }
+      });
+
+      const cells = [];
+      for (let i = 0; i < startDow; i++) {
+        cells.push(`<div class="cal-cell empty"></div>`);
+      }
+      const today = todayStr();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const ds = `${prefix}${String(d).padStart(2, '0')}`;
+        const m = dayMins[ds] || 0;
+        let hm = '';
+        if (m >= 90) hm = 'hm4';
+        else if (m >= 50) hm = 'hm3';
+        else if (m >= 25) hm = 'hm2';
+        else if (m > 0) hm = 'hm1';
+
+        const isToday = ds === today;
+        const isSel = ds === state.calendarSelectedDate;
+        cells.push(`
+          <button type="button" class="cal-cell ${hm} ${isToday ? 'is-today' : ''} ${isSel ? 'selected' : ''}" data-action="select-cal-date" data-date="${ds}">
+            <span>${d}</span>
+            ${m > 0 ? `<span class="cal-min">${m}m</span>` : ''}
+          </button>`);
+      }
+
+      const selLogs = getLogsForDate(state.calendarSelectedDate);
+      const selTotal = selLogs.reduce((s, l) => s + l.duration, 0);
+
+      return `
+        <div class="card-panel">
+          <div class="cal-head">
+            <button type="button" class="btn-mini" data-action="shift-cal-month" data-delta="-1">◀ 前月</button>
+            <strong style="font-size:15px;">${year}年 ${month + 1}月</strong>
+            <button type="button" class="btn-mini" data-action="shift-cal-month" data-delta="1">翌月 ▶</button>
+          </div>
+          <div class="cal-weekdays">${WEEKDAYS.map(w => `<span>${w}</span>`).join('')}</div>
+          <div class="cal-grid">${cells.join('')}</div>
+        </div>
+
+        <div class="log-list-card">
+          <div class="section-head">
+            <div class="section-title">${formatDisplayDate(state.calendarSelectedDate)}（${selTotal}分）</div>
+            <button type="button" class="btn-mini gold" data-action="jump-to-date" data-date="${state.calendarSelectedDate}">＋ この日に記録</button>
+          </div>
+          ${selLogs.length === 0
+            ? `<div class="empty-state">この日の記録はありません。</div>`
+            : selLogs.map(renderLogRow).join('')}
+        </div>`;
+    }
+
+    /* ========================
+       Render Settings View
+       ======================== */
+    function renderSettingsView() {
+      const totalLogs = state.data.logs.length;
+      const totalMins = state.data.logs.reduce((s, l) => s + l.duration, 0);
+
+      return `
+        <div class="card-panel">
+          <div class="panel-title"><span>データ概要</span></div>
+          <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+            累計記録数：<strong style="color:var(--text);">${totalLogs}件</strong> ／
+            累計時間：<strong style="color:var(--gold-bright);">${totalMins}分</strong><br>
+            登録メニュー：基礎 ${state.data.basics.length} ／ スケール 24調 ／ エチュード ${state.data.etudes.length}
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-title"><span>テスト・バックアップ</span></div>
+          <div class="setting-btn-row">
+            <button type="button" class="action-btn gold" data-action="load-sample">
+              <span>✨ サンプルデータを読込（過去14日分）</span>
+              <span>›</span>
+            </button>
+            <button type="button" class="action-btn" data-action="export-json">
+              <span>📤 JSONバックアップを保存</span>
+              <span>›</span>
+            </button>
+            <button type="button" class="action-btn" data-action="copy-json">
+              <span>📋 JSONデータをコピー（iPhoneメモ用）</span>
+              <span>›</span>
+            </button>
+            <button type="button" class="action-btn" data-action="trigger-import-file">
+              <span>📥 JSONファイルから復元</span>
+              <span>›</span>
+            </button>
+            <button type="button" class="action-btn" data-action="open-paste-import">
+              <span>📝 JSONテキストを貼り付けて復元</span>
+              <span>›</span>
+            </button>
+            <button type="button" class="action-btn danger" data-action="reset-all">
+              <span>🗑 全データをリセット</span>
+              <span>›</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-panel" style="font-size:12px;color:var(--text-muted);line-height:1.6;">
+          <strong style="color:var(--text-sub);">PWA運用のヒント</strong><br>
+          iPhoneではSafariで開いて「ホーム画面に追加」すると、URLバーなしのアプリとしてオフラインでも使えます。ホーム画面アイコン側とSafari側で保存領域が分かれるため、普段の記録はホーム画面アイコンから起動して統一するのがおすすめです。
+        </div>`;
+    }
+
+    /* ========================
+       Logging Bottom Sheet
+       ======================== */
+    function openLogSheet(opts) {
+      // opts: { category, itemId, etudeNum, editLogId, date }
+      resetTimerState();
+
+      const editingLog = opts.editLogId
+        ? state.data.logs.find(l => l.id === opts.editLogId)
+        : null;
+
+      const category = editingLog ? editingLog.category : opts.category;
+      const itemId = editingLog ? editingLog.itemId : opts.itemId;
+      const etudeNum = editingLog
+        ? editingLog.etudeNum
+        : (opts.etudeNum !== undefined && opts.etudeNum !== null && opts.etudeNum !== '' ? Number(opts.etudeNum) : null);
+      const date = editingLog ? editingLog.date : (opts.date || state.selectedDate);
+
+      let itemName = '';
+      let defaultBpm = 80;
+      let defaultDuration = 10;
+      let etudeBook = null;
+
+      if (category === 'basic') {
+        const b = state.data.basics.find(x => x.id === itemId);
+        itemName = b ? b.name : (editingLog ? editingLog.itemName : '基礎練習');
+        defaultBpm = b ? b.defaultBpm : 80;
+        defaultDuration = b ? b.defaultDuration : 10;
+      } else if (category === 'scale') {
+        const s = SCALE_MAP[itemId];
+        itemName = s ? s.name : (editingLog ? editingLog.itemName : 'スケール');
+        defaultBpm = 88;
+        defaultDuration = 10;
+      } else if (category === 'etude') {
+        etudeBook = state.data.etudes.find(x => x.id === itemId);
+        itemName = etudeBook ? etudeBook.name : (editingLog ? editingLog.itemName : 'エチュード');
+        defaultBpm = etudeBook ? etudeBook.defaultBpm : 100;
+        defaultDuration = etudeBook ? etudeBook.defaultDuration : 15;
+      }
+
+      const prevStats = getItemStats(category, itemId, etudeNum);
+      const savedTarget = category === 'etude'
+        ? (state.data.etudeTargets[etudeTargetKey(itemId, etudeNum)] || null)
+        : null;
+
+      let bpmVal, noTempo, durationVal, targetBpmVal, tagsVal, memoVal;
+
+      if (editingLog) {
+        bpmVal = editingLog.bpm;
+        noTempo = editingLog.bpm === null;
+        durationVal = editingLog.duration;
+        targetBpmVal = editingLog.targetBpm !== null ? editingLog.targetBpm : savedTarget;
+        tagsVal = Array.isArray(editingLog.tags) ? [...editingLog.tags] : [];
+        memoVal = editingLog.memo || '';
+      } else {
+        bpmVal = prevStats.lastBpm !== null ? prevStats.lastBpm : defaultBpm;
+        noTempo = bpmVal === null;
+        durationVal = prevStats.lastDuration || defaultDuration;
+        targetBpmVal = savedTarget;
+        tagsVal = [];
+        memoVal = '';
+      }
+
+      state.logDraft = {
+        editLogId: editingLog ? editingLog.id : null,
+        date,
+        category,
+        itemId,
+        itemName,
+        etudeNum,
+        etudeBook,
+        bpm: bpmVal !== null ? bpmVal : 80,
+        noTempo,
+        targetBpm: targetBpmVal,
+        duration: durationVal,
+        tags: tagsVal,
+        memo: memoVal
+      };
+
+      renderLogSheet();
+      openModal('logModal');
+    }
+
+    function renderLogSheet() {
+      const d = state.logDraft;
+      if (!d) return;
+
+      const isScale = d.category === 'scale';
+      const isEtude = d.category === 'etude';
+      const scaleObj = isScale ? SCALE_MAP[d.itemId] : null;
+      const isNumberedEtude = isEtude && d.etudeBook && d.etudeBook.hasNumbers && d.etudeNum !== null;
+
+      // Scale tags: Major vs Minor (exact user spec!)
+      let scaleTags = [];
+      if (scaleObj) {
+        scaleTags = scaleObj.mode === 'major'
+          ? ['音階', '3〜8度', 'アルペジオ']
+          : ['和声的短音階', '旋律的短音階', '3〜8度', 'アルペジオ'];
+      }
+
+      // Duration chips: hide 45 & 60 for scales!
+      const durPresets = isScale ? [5, 10, 15, 20, 30] : [5, 10, 15, 20, 30, 45, 60];
+
+      // Target BPM comparison hint
+      let targetHintHtml = '';
+      if (isEtude && d.targetBpm && !d.noTempo) {
+        const diff = d.targetBpm - d.bpm;
+        if (diff > 0) {
+          targetHintHtml = `<div class="target-status-hint unreached">目標インテンポ（♩=${d.targetBpm}）まであと +${diff} BPM（目標未達リストに表示されます）</div>`;
+        } else {
+          targetHintHtml = `<div class="target-status-hint reached">✓ 目標インテンポ（♩=${d.targetBpm}）達成！</div>`;
+        }
+      }
+
+      const sheetTitle = isNumberedEtude
+        ? `${d.itemName}`
+        : (isScale ? `${d.itemName} ${scaleObj && scaleObj.mode === 'major' ? 'Major' : 'minor'}` : d.itemName);
+
+      document.getElementById('logSheetContent').innerHTML = `
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div>
+            <div class="sheet-title">${escapeHtml(sheetTitle)}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${formatDisplayDate(d.date)}${d.editLogId ? ' ・ 記録を編集中' : ''}</div>
+          </div>
+          <button type="button" class="close-btn" data-action="close-modal" data-modal="logModal">×</button>
+        </div>
+
+        ${isNumberedEtude && !d.editLogId ? `
+          <div class="etude-sheet-nav">
+            <button type="button" class="etude-nav-step" data-action="step-etude-num" data-delta="-1" ${d.etudeNum <= d.etudeBook.startNum ? 'disabled' : ''}>◀ No.${d.etudeNum - 1}</button>
+            <span class="etude-nav-current">No.${d.etudeNum}</span>
+            <button type="button" class="etude-nav-step" data-action="step-etude-num" data-delta="1" ${d.etudeNum >= d.etudeBook.endNum ? 'disabled' : ''}>No.${d.etudeNum + 1} ▶</button>
+          </div>` : ''}
+
+        ${scaleObj ? `
+          <div class="sheet-scale-banner">
+            <div>
+              <div style="font-size:18px;font-weight:800;color:${scaleObj.mode === 'major' ? 'var(--gold-bright)' : 'var(--teal-bright)'};">${scaleObj.name}</div>
+              <div style="font-size:11px;color:var(--text-sub);">調号：${scaleObj.badge === '0' ? 'なし' : scaleObj.badge}</div>
+            </div>
+            <div class="staff-lg">${buildKeySignatureSvg(scaleObj)}</div>
+          </div>` : ''}
+
+        <!-- BPM -->
+        <div class="field-block">
+          <div class="field-label-row">
+            <span class="field-label">テンポ（BPM）</span>
+            <label class="toggle-inline">
+              <input type="checkbox" id="sheetNoTempoCheck" data-action="toggle-no-tempo" ${d.noTempo ? 'checked' : ''} />
+              <span>テンポなし</span>
+            </label>
+          </div>
+          <div class="stepper-row">
+            <button type="button" class="step-btn" data-action="step-bpm" data-delta="-5" ${d.noTempo ? 'disabled' : ''}>-5</button>
+            <button type="button" class="step-btn" data-action="step-bpm" data-delta="-1" ${d.noTempo ? 'disabled' : ''}>-1</button>
+            <input type="number" inputmode="numeric" id="sheetBpmInput" class="num-input" value="${d.noTempo ? '' : d.bpm}" placeholder="---" min="20" max="300" ${d.noTempo ? 'disabled' : ''} />
+            <button type="button" class="step-btn" data-action="step-bpm" data-delta="1" ${d.noTempo ? 'disabled' : ''}>+1</button>
+            <button type="button" class="step-btn" data-action="step-bpm" data-delta="5" ${d.noTempo ? 'disabled' : ''}>+5</button>
+          </div>
+        </div>
+
+        <!-- Target BPM for Etudes -->
+        ${isEtude ? `
+          <div class="field-block">
+            <div class="field-label-row">
+              <span class="field-label">🎯 目標テンポ（インテンポ・任意）</span>
+              ${d.targetBpm ? `<button type="button" class="btn-mini" style="min-height:26px;font-size:11px;padding:0 8px;" data-action="clear-target-bpm">クリア</button>` : ''}
+            </div>
+            <div class="stepper-row">
+              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="-5">-5</button>
+              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="-1">-1</button>
+              <input type="number" inputmode="numeric" id="sheetTargetBpmInput" class="num-input" style="color:#fbbf24;" value="${d.targetBpm || ''}" placeholder="未設定" min="20" max="300" />
+              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="1">+1</button>
+              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="5">+5</button>
+            </div>
+            <div id="sheetTargetHintWrap">${targetHintHtml}</div>
+          </div>` : ''}
+
+        <!-- Duration + Timer -->
+        <div class="field-block">
+          <div class="field-label-row">
+            <span class="field-label">所要時間（分）</span>
+          </div>
+          <div class="stepper-row">
+            <button type="button" class="step-btn" data-action="step-duration" data-delta="-5">-5</button>
+            <button type="button" class="step-btn" data-action="step-duration" data-delta="-1">-1</button>
+            <input type="number" inputmode="numeric" id="sheetDurationInput" class="num-input" value="${d.duration}" min="1" max="360" />
+            <button type="button" class="step-btn" data-action="step-duration" data-delta="1">+1</button>
+            <button type="button" class="step-btn" data-action="step-duration" data-delta="5">+5</button>
+          </div>
+          <div class="chip-row" id="sheetDurChips">
+            ${durPresets.map(m => `<button type="button" class="chip-btn ${d.duration === m ? 'active' : ''}" data-action="set-duration" data-min="${m}">${m}分</button>`).join('')}
+          </div>
+          <div class="timer-box" id="sheetTimerBox"></div>
+        </div>
+
+        <!-- Scale Quick Tags -->
+        ${scaleTags.length > 0 ? `
+          <div class="field-block">
+            <div class="field-label-row"><span class="field-label">練習内容タグ</span></div>
+            <div class="chip-row" id="sheetScaleTags">
+              ${scaleTags.map(t => `<button type="button" class="chip-btn ${d.tags.includes(t) ? 'tag-active' : ''}" data-action="toggle-scale-tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
+            </div>
+          </div>` : ''}
+
+        <!-- Memo -->
+        <div class="field-block">
+          <div class="field-label-row"><span class="field-label">メモ（任意）</span></div>
+          <input type="text" id="sheetMemoInput" class="text-input" value="${escapeHtml(d.memo)}" placeholder="意識したこと・課題など" />
+        </div>
+
+        <div class="sheet-footer">
+          <button type="button" class="btn-cancel" data-action="close-modal" data-modal="logModal">閉じる</button>
+          <button type="button" class="btn-save" data-action="save-log">${d.editLogId ? '変更を保存' : '記録を保存'}</button>
+        </div>`;
+
+      renderLogSheetTimerArea();
+    }
+
+    function updateDurationChipsDom() {
+      if (!state.logDraft) return;
+      document.querySelectorAll('#sheetDurChips .chip-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.min) === state.logDraft.duration);
+      });
+    }
+
+    function updateTargetHintDom() {
+      const wrap = document.getElementById('sheetTargetHintWrap');
+      const d = state.logDraft;
+      if (!wrap || !d || d.category !== 'etude') return;
+      if (d.targetBpm && !d.noTempo) {
+        const diff = d.targetBpm - d.bpm;
+        wrap.innerHTML = diff > 0
+          ? `<div class="target-status-hint unreached">目標インテンポ（♩=${d.targetBpm}）まであと +${diff} BPM（目標未達リストに表示されます）</div>`
+          : `<div class="target-status-hint reached">✓ 目標インテンポ（♩=${d.targetBpm}）達成！</div>`;
+      } else {
+        wrap.innerHTML = '';
+      }
+    }
+
+    function saveLogDraft() {
+      const d = state.logDraft;
+      if (!d) return;
+
+      // Auto-stop & apply running timer!
+      if (state.timer.running) {
+        const elapsedMs = getTimerElapsedMs();
+        stopTimerInterval();
+        state.timer.running = false;
+        d.duration = Math.max(1, Math.round(elapsedMs / 60000));
+      } else {
+        const durEl = document.getElementById('sheetDurationInput');
+        if (durEl) d.duration = Math.max(1, Math.min(360, parseInt(durEl.value, 10) || 1));
+      }
+
+      const bpmEl = document.getElementById('sheetBpmInput');
+      const targetEl = document.getElementById('sheetTargetBpmInput');
+      const memoEl = document.getElementById('sheetMemoInput');
+
+      const finalBpm = d.noTempo ? null : Math.max(20, Math.min(300, parseInt(bpmEl ? bpmEl.value : d.bpm, 10) || 80));
+      let finalTarget = null;
+      if (d.category === 'etude' && targetEl) {
+        const rawT = targetEl.value.trim();
+        if (rawT !== '') {
+          const parsedT = parseInt(rawT, 10);
+          if (!isNaN(parsedT) && parsedT >= 20 && parsedT <= 300) {
+            finalTarget = parsedT;
+          }
+        }
+        // Persist target BPM for this etude (and number)
+        const key = etudeTargetKey(d.itemId, d.etudeNum);
+        if (finalTarget !== null) {
+          state.data.etudeTargets[key] = finalTarget;
+        } else {
+          delete state.data.etudeTargets[key];
+        }
+      }
+
+      const finalMemo = memoEl ? memoEl.value.trim() : d.memo;
+
+      if (d.editLogId) {
+        const idx = state.data.logs.findIndex(l => l.id === d.editLogId);
+        if (idx !== -1) {
+          state.data.logs[idx] = {
+            ...state.data.logs[idx],
+            bpm: finalBpm,
+            targetBpm: finalTarget,
+            duration: d.duration,
+            tags: [...d.tags],
+            memo: finalMemo
+          };
+        }
+        showToast('記録を更新しました');
+      } else {
+        state.data.logs.push({
+          id: uid('log'),
+          date: d.date,
+          category: d.category,
+          itemId: d.itemId,
+          itemName: d.itemName,
+          etudeNum: d.etudeNum,
+          bpm: finalBpm,
+          targetBpm: finalTarget,
+          duration: d.duration,
+          tags: [...d.tags],
+          memo: finalMemo,
+          createdAt: Date.now()
+        });
+        const label = d.etudeNum !== null ? `${d.itemName} No.${d.etudeNum}` : d.itemName;
+        showToast(`${label}（${d.duration}分）を記録しました`);
+      }
+
+      saveData();
+      closeModal('logModal');
+      render();
+    }
+
+    /* ========================
+       Add Menu Modal
+       ======================== */
+    function openAddMenuSheet(category) {
+      const isEtude = category === 'etude';
+      document.getElementById('addMenuSheetContent').innerHTML = `
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div class="sheet-title">${isEtude ? 'エチュードを追加' : '基礎練習メニューを追加'}</div>
+          <button type="button" class="close-btn" data-action="close-modal" data-modal="addMenuModal">×</button>
+        </div>
+
+        <input type="hidden" id="addMenuCategory" value="${category}" />
+
+        <div class="field-block">
+          <div class="field-label-row"><span class="field-label">${isEtude ? '教本・曲集名' : 'メニュー名'}</span></div>
+          <input type="text" id="addMenuName" class="text-input" placeholder="${isEtude ? '例：ボーザ 12のエチュード' : '例：フラッタータンギング'}" />
+        </div>
+
+        ${isEtude ? `
+          <div class="field-block" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:12px;">
+            <label class="toggle-inline" style="font-size:14px;color:var(--text);margin-bottom:8px;">
+              <input type="checkbox" id="addEtudeHasNumbers" data-action="toggle-add-etude-nums" checked />
+              <span>曲番号を使う（1〜○番で個別管理）</span>
+            </label>
+            <div id="addEtudeNumRange" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+              <div>
+                <div class="field-label" style="margin-bottom:4px;">開始番号</div>
+                <input type="number" inputmode="numeric" id="addEtudeStartNum" class="text-input" value="1" min="1" max="200" />
+              </div>
+              <div>
+                <div class="field-label" style="margin-bottom:4px;">終了番号（曲数）</div>
+                <input type="number" inputmode="numeric" id="addEtudeEndNum" class="text-input" value="50" min="1" max="300" />
+              </div>
+            </div>
+          </div>` : ''}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="field-block">
+            <div class="field-label-row"><span class="field-label">目安BPM（任意）</span></div>
+            <input type="number" inputmode="numeric" id="addMenuBpm" class="text-input" value="${isEtude ? 100 : 80}" placeholder="空欄でテンポなし" />
+          </div>
+          <div class="field-block">
+            <div class="field-label-row"><span class="field-label">目安時間（分）</span></div>
+            <input type="number" inputmode="numeric" id="addMenuDur" class="text-input" value="${isEtude ? 15 : 10}" min="1" max="180" />
+          </div>
+        </div>
+
+        <div class="sheet-footer">
+          <button type="button" class="btn-cancel" data-action="close-modal" data-modal="addMenuModal">キャンセル</button>
+          <button type="button" class="btn-save" data-action="submit-add-menu">追加する</button>
+        </div>`;
+      openModal('addMenuModal');
+      setTimeout(() => {
+        const inp = document.getElementById('addMenuName');
+        if (inp) inp.focus();
+      }, 60);
+    }
+
+    function submitAddMenu() {
+      const category = document.getElementById('addMenuCategory').value;
+      const name = (document.getElementById('addMenuName').value || '').trim();
+      if (!name) {
+        showToast('名前を入力してください');
+        return;
+      }
+
+      const rawBpm = (document.getElementById('addMenuBpm').value || '').trim();
+      const defaultBpm = rawBpm === '' ? null : Math.max(20, Math.min(300, parseInt(rawBpm, 10) || 80));
+      const defaultDuration = Math.max(1, Math.min(180, parseInt(document.getElementById('addMenuDur').value, 10) || 10));
+
+      if (category === 'basic') {
+        state.data.basics.push({ id: uid('b'), name, defaultBpm, defaultDuration });
+      } else {
+        const hasNumbers = Boolean(document.getElementById('addEtudeHasNumbers').checked);
+        let startNum = Math.max(1, parseInt(document.getElementById('addEtudeStartNum').value, 10) || 1);
+        let endNum = Math.max(startNum, parseInt(document.getElementById('addEtudeEndNum').value, 10) || startNum);
+        if (endNum - startNum > 299) endNum = startNum + 299;
+        state.data.etudes.push({
+          id: uid('e'),
+          name,
+          hasNumbers,
+          startNum: hasNumbers ? startNum : 1,
+          endNum: hasNumbers ? endNum : 1,
+          defaultBpm: defaultBpm || 100,
+          defaultDuration
+        });
+      }
+
+      saveData();
+      closeModal('addMenuModal');
+      showToast(`「${name}」を追加しました`);
+      render();
+    }
+
+    /* ========================
+       Menu Delete + Undo & Drag/Flick Reorder
+       ======================== */
+    function deleteMenuItem(listName, id) {
+      const list = state.data[listName];
+      if (!Array.isArray(list)) return;
+      const idx = list.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const [removed] = list.splice(idx, 1);
+      state.lastDeletedMenu = { listName, item: removed, index: idx };
+      saveData();
+      render();
+      showToast(`「${removed.name}」を削除しました`, true);
+    }
+
+    function undoDeleteMenu() {
+      if (!state.lastDeletedMenu) return;
+      const { listName, item, index } = state.lastDeletedMenu;
+      const list = state.data[listName];
+      if (Array.isArray(list)) {
+        const safeIdx = Math.min(index, list.length);
+        list.splice(safeIdx, 0, item);
+        saveData();
+      }
+      state.lastDeletedMenu = null;
+      document.getElementById('toastContainer').innerHTML = '';
+      render();
+      showToast(`「${item.name}」を元に戻しました`);
+    }
+
+    function setupPointerReorder() {
+      const main = document.getElementById('mainView');
+
+      main.addEventListener('pointerdown', (e) => {
+        if (!state.editMode) return;
+        if (e.target.closest('[data-action="delete-menu"]')) return;
+        const card = e.target.closest('.menu-card.editing');
+        if (!card) return;
+
+        const listName = card.dataset.reorderList;
+        const index = Number(card.dataset.index);
+        if (!listName || isNaN(index)) return;
+
+        card.classList.add('dragging');
+        state.drag = {
+          pointerId: e.pointerId,
+          listName,
+          fromIndex: index,
+          overIndex: index,
+          startX: e.clientX,
+          startY: e.clientY,
+          lastX: e.clientX,
+          lastY: e.clientY,
+          moved: false,
+          sourceCard: card
+        };
+        try { card.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+
+      main.addEventListener('pointermove', (e) => {
+        if (!state.drag || e.pointerId !== state.drag.pointerId) return;
+        const d = state.drag;
+        d.lastX = e.clientX;
+        d.lastY = e.clientY;
+        const dist = Math.hypot(d.lastX - d.startX, d.lastY - d.startY);
+        if (dist > 8) d.moved = true;
+
+        // Clear previous highlights
+        document.querySelectorAll('.menu-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+        // Hit test card under pointer
+        d.sourceCard.style.pointerEvents = 'none';
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        d.sourceCard.style.pointerEvents = '';
+        const targetCard = hit ? hit.closest('.menu-card.editing') : null;
+
+        if (targetCard && targetCard.dataset.reorderList === d.listName) {
+          const targetIdx = Number(targetCard.dataset.index);
+          if (!isNaN(targetIdx) && targetIdx !== d.fromIndex) {
+            d.overIndex = targetIdx;
+            targetCard.classList.add('drag-over');
+          } else {
+            d.overIndex = d.fromIndex;
+          }
+        } else {
+          d.overIndex = d.fromIndex;
+        }
+      });
+
+      function finishDrag(e) {
+        if (!state.drag || (e.pointerId !== undefined && e.pointerId !== state.drag.pointerId)) return;
+        const d = state.drag;
+        state.drag = null;
+
+        if (d.sourceCard) {
+          d.sourceCard.classList.remove('dragging');
+          try { d.sourceCard.releasePointerCapture(d.pointerId); } catch (_) {}
+        }
+        document.querySelectorAll('.menu-card.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+        const list = state.data[d.listName];
+        if (!Array.isArray(list) || list.length < 2) return;
+
+        let targetIndex = d.overIndex;
+
+        // Flick fallback: if user flicked without dropping directly on another card
+        if (targetIndex === d.fromIndex && d.moved) {
+          const dx = d.lastX - d.startX;
+          const dy = d.lastY - d.startY;
+          const absX = Math.abs(dx);
+          const absY = Math.abs(dy);
+          const stepCols = d.listName === 'basics' ? 2 : 1;
+
+          if (Math.max(absX, absY) >= 30) {
+            if (absX >= absY) {
+              targetIndex = dx > 0 ? Math.min(list.length - 1, d.fromIndex + 1) : Math.max(0, d.fromIndex - 1);
+            } else {
+              targetIndex = dy > 0 ? Math.min(list.length - 1, d.fromIndex + stepCols) : Math.max(0, d.fromIndex - stepCols);
+            }
+          }
+        }
+
+        if (targetIndex !== d.fromIndex && targetIndex >= 0 && targetIndex < list.length) {
+          const [movedItem] = list.splice(d.fromIndex, 1);
+          list.splice(targetIndex, 0, movedItem);
+          saveData();
+          render();
+        }
+      }
+
+      main.addEventListener('pointerup', finishDrag);
+      main.addEventListener('pointercancel', finishDrag);
+    }
+
+    /* ========================
+       Sample Data & Import/Export
+       ======================== */
+    function loadSampleData() {
+      const def = getDefaultData();
+      const today = todayStr();
+      const logs = [];
+      let ts = Date.now() - 86400000 * 15;
+
+      const pushLog = (daysAgo, category, itemId, itemName, etudeNum, bpm, targetBpm, duration, tags, memo) => {
+        ts += 60000;
+        logs.push({
+          id: uid('smp'),
+          date: addDays(today, -daysAgo),
+          category,
+          itemId,
+          itemName,
+          etudeNum,
+          bpm,
+          targetBpm,
+          duration,
+          tags: tags || [],
+          memo: memo || '',
+          createdAt: ts
+        });
+      };
+
+      // Etude targets (realistic classical saxophone tempo targets)
+      def.etudeTargets = {
+        'e_ferling#1': 72,
+        'e_ferling#2': 126,
+        'e_ferling#3': 66,
+        'e_ferling#4': 116,
+        'e_ferling#5': 120,
+        'e_ferling#6': 132,
+        'e_ferling#7': 60,
+        'e_ferling#8': 124,
+        'e_lacour#1': 112,
+        'e_lacour#2': 104,
+        'e_lacour#3': 120
+      };
+
+      // Basics across 14 days (intentionally leave Vibrato & Altissimo neglected)
+      [13, 11, 9, 7, 5, 3, 1, 0].forEach((d, i) => {
+        pushLog(d, 'basic', 'b_longtone', 'ロングトーン', null, 60, null, 10, [], i === 7 ? '低音B♭の立ち上がりを意識' : '');
+      });
+      [12, 8, 5, 2, 0].forEach(d => {
+        pushLog(d, 'basic', 'b_overtone', '倍音・オーバートーン', null, null, null, 10, [], '低音B♭から第4倍音まで');
+      });
+      [10, 6, 4, 1].forEach((d, i) => {
+        pushLog(d, 'basic', 'b_tonguing', 'タンギング', null, 96 + i * 4, null, 10, [], '16分音符の均一さ');
+      });
+      pushLog(9, 'basic', 'b_dynamics', 'ダイナミクス・サブトーン', null, 60, null, 10, [], 'ppの安定');
+      pushLog(11, 'basic', 'b_vibrato', 'ビブラート', null, 72, null, 5, [], '');
+
+      // Scales (mix of Major & Minor, leaving several keys unpracticed)
+      pushLog(12, 'scale', 'sc_C',   'C',      null, 92,  null, 10, ['音階', '3〜8度'], '');
+      pushLog(10, 'scale', 'sc_G',   'G',      null, 96,  null, 10, ['音階', 'アルペジオ'], '');
+      pushLog(8,  'scale', 'sc_D',   'D',      null, 92,  null, 10, ['音階'], '');
+      pushLog(6,  'scale', 'sc_Fs',  'F♯/G♭', null, 80,  null, 15, ['音階', '3〜8度'], '運指の切り替え重点');
+      pushLog(4,  'scale', 'sc_Eb',  'E♭',    null, 100, null, 10, ['音階', 'アルペジオ'], '');
+      pushLog(2,  'scale', 'sc_Bb',  'B♭',    null, 104, null, 10, ['3〜8度'], '');
+      pushLog(0,  'scale', 'sc_A',   'A',      null, 96,  null, 10, ['音階', 'アルペジオ'], '高音域の響き確認');
+      pushLog(11, 'scale', 'sc_am',  'a',      null, 88,  null, 10, ['和声的短音階', '旋律的短音階'], '');
+      pushLog(7,  'scale', 'sc_em',  'e',      null, 88,  null, 10, ['旋律的短音階'], '');
+      pushLog(3,  'scale', 'sc_dsm', 'd♯/e♭', null, 76,  null, 15, ['和声的短音階', 'アルペジオ'], 'サイドキー周り丁寧に');
+      pushLog(1,  'scale', 'sc_cm',  'c',      null, 92,  null, 10, ['和声的短音階', '3〜8度'], '');
+
+      // Ferling numbered etudes (some reached target, some unreached, some old for review cycling)
+      pushLog(13, 'etude', 'e_ferling', 'フェルリング（48の練習曲）', 1, 72,  72,  15, [], 'フレージング良好');
+      pushLog(11, 'etude', 'e_ferling', 'フェルリング（48の練習曲）', 2, 112, 126, 20, [], '中盤の跳躍がまだ重い');
+      pushLog(9,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 3, 66,  66,  15, [], '');
+      pushLog(7,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 4, 116, 116, 15, [], 'インテンポ達成');
+      pushLog(5,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 5, 104, 120, 20, [], '3連符の粒を揃える');
+      pushLog(3,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 6, 116, 132, 20, [], '後半スタミナ課題');
+      pushLog(1,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 7, 60,  60,  15, [], '');
+      pushLog(0,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 8, 108, 124, 20, [], 'あと+16でインテンポ');
+
+      // Lacour numbered etudes
+      pushLog(8,  'etude', 'e_lacour',  'ラクール（50の練習曲）',     1, 112, 112, 15, [], '移調モード確認');
+      pushLog(4,  'etude', 'e_lacour',  'ラクール（50の練習曲）',     2, 92,  104, 15, [], 'リズムの取り直し');
+      pushLog(1,  'etude', 'e_lacour',  'ラクール（50の練習曲）',     3, 100, 120, 15, [], '音程の跳躍に注意');
+
+      def.logs = logs;
+      state.data = def;
+      state.activeEtudeBookId = null;
+      saveData();
+      render();
+      showToast('過去14日分のサンプルデータを読み込みました');
+    }
+
+    function exportJsonFile() {
+      const jsonStr = JSON.stringify(state.data, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `saxlog-backup-${todayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('JSONバックアップを保存しました');
+    }
+
+    function copyJsonToClipboard() {
+      const jsonStr = JSON.stringify(state.data, null, 2);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(jsonStr).then(() => {
+          showToast('JSONデータをクリップボードにコピーしました');
+        }).catch(() => {
+          showToast('コピーに失敗しました。ファイル保存をお試しください');
+        });
+      } else {
+        showToast('この環境ではコピー非対応です。ファイル保存をお試しください');
+      }
+    }
+
+    function importJsonString(text) {
+      try {
+        const parsed = JSON.parse(text);
+        if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.logs)) {
+          showToast('SaxLogのデータ形式ではありません');
+          return false;
+        }
+        state.data = sanitizeData(parsed);
+        state.activeEtudeBookId = null;
+        saveData();
+        render();
+        showToast(`データを復元しました（${state.data.logs.length}件の記録）`);
+        return true;
+      } catch (e) {
+        showToast('JSONの読み込みに失敗しました');
+        return false;
+      }
+    }
+
+    /* ========================
+       Central Event Delegation
+       ======================== */
+    document.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-action]');
+      if (!target) return;
+
+      const action = target.dataset.action;
+
+      // Backdrop click: only close when clicking directly on the backdrop itself
+      if (action === 'backdrop-close') {
+        if (e.target === target) {
+          closeModal(target.dataset.modal);
+        }
+        return;
+      }
+
+      switch (action) {
+        case 'switch-tab': {
+          state.activeTab = target.dataset.tab;
+          state.editMode = false;
+          render();
+          break;
+        }
+        case 'switch-pillar': {
+          state.activePillar = target.dataset.pillar;
+          state.editMode = false;
+          if (state.activePillar !== 'etude') state.activeEtudeBookId = null;
+          render();
+          break;
+        }
+        case 'shift-date': {
+          state.selectedDate = addDays(state.selectedDate, Number(target.dataset.delta) || 0);
+          render();
+          break;
+        }
+        case 'go-today': {
+          state.selectedDate = todayStr();
+          render();
+          break;
+        }
+        case 'toggle-edit-mode': {
+          state.editMode = !state.editMode;
+          render();
+          break;
+        }
+        case 'open-add-menu': {
+          openAddMenuSheet(target.dataset.category);
+          break;
+        }
+        case 'submit-add-menu': {
+          submitAddMenu();
+          break;
+        }
+        case 'delete-menu': {
+          e.stopPropagation();
+          deleteMenuItem(target.dataset.list, target.dataset.id);
+          break;
+        }
+        case 'undo-delete-menu': {
+          undoDeleteMenu();
+          break;
+        }
+        case 'set-scale-sort': {
+          state.data.ui.scaleSort = target.dataset.sort;
+          saveData();
+          render();
+          break;
+        }
+        case 'set-scale-filter': {
+          state.data.ui.scaleFilter = target.dataset.filter;
+          saveData();
+          render();
+          break;
+        }
+        case 'open-etude-book': {
+          state.activeEtudeBookId = target.dataset.id;
+          state.editMode = false;
+          render();
+          break;
+        }
+        case 'close-etude-book': {
+          state.activeEtudeBookId = null;
+          render();
+          break;
+        }
+        case 'set-etude-filter': {
+          state.data.ui.etudeNumberFilter = target.dataset.filter;
+          saveData();
+          render();
+          break;
+        }
+        case 'open-log': {
+          const cat = target.dataset.category;
+          const id = target.dataset.id;
+          const num = target.dataset.num !== undefined && target.dataset.num !== '' ? Number(target.dataset.num) : null;
+          openLogSheet({ category: cat, itemId: id, etudeNum: num });
+          break;
+        }
+        case 'edit-log': {
+          openLogSheet({ editLogId: target.dataset.logId });
+          break;
+        }
+        case 'delete-log': {
+          const logId = target.dataset.logId;
+          openConfirm('記録を削除', 'この練習記録を削除しますか？', '削除する', () => {
+            state.data.logs = state.data.logs.filter(l => l.id !== logId);
+            saveData();
+            render();
+            showToast('記録を削除しました');
+          });
+          break;
+        }
+        case 'step-etude-num': {
+          if (!state.logDraft || !state.logDraft.etudeBook) return;
+          const nextNum = state.logDraft.etudeNum + (Number(target.dataset.delta) || 0);
+          const b = state.logDraft.etudeBook;
+          if (nextNum >= b.startNum && nextNum <= b.endNum) {
+            openLogSheet({ category: 'etude', itemId: b.id, etudeNum: nextNum, date: state.logDraft.date });
+          }
+          break;
+        }
+        case 'step-bpm': {
+          if (!state.logDraft || state.logDraft.noTempo) return;
+          const delta = Number(target.dataset.delta) || 0;
+          const inp = document.getElementById('sheetBpmInput');
+          const cur = parseInt(inp ? inp.value : state.logDraft.bpm, 10) || 80;
+          const next = Math.max(20, Math.min(300, cur + delta));
+          state.logDraft.bpm = next;
+          if (inp) inp.value = next;
+          updateTargetHintDom();
+          break;
+        }
+        case 'step-target-bpm': {
+          if (!state.logDraft) return;
+          const delta = Number(target.dataset.delta) || 0;
+          const inp = document.getElementById('sheetTargetBpmInput');
+          const curVal = inp && inp.value.trim() !== '' ? parseInt(inp.value, 10) : (state.logDraft.bpm || 100);
+          const next = Math.max(20, Math.min(300, curVal + delta));
+          state.logDraft.targetBpm = next;
+          if (inp) inp.value = next;
+          updateTargetHintDom();
+          break;
+        }
+        case 'clear-target-bpm': {
+          if (!state.logDraft) return;
+          state.logDraft.targetBpm = null;
+          renderLogSheet();
+          break;
+        }
+        case 'step-duration': {
+          if (!state.logDraft) return;
+          const delta = Number(target.dataset.delta) || 0;
+          const inp = document.getElementById('sheetDurationInput');
+          const cur = parseInt(inp ? inp.value : state.logDraft.duration, 10) || 5;
+          const next = Math.max(1, Math.min(360, cur + delta));
+          state.logDraft.duration = next;
+          if (inp) inp.value = next;
+          updateDurationChipsDom();
+          break;
+        }
+        case 'set-duration': {
+          if (!state.logDraft) return;
+          const m = Math.max(1, Number(target.dataset.min) || 10);
+          state.logDraft.duration = m;
+          const inp = document.getElementById('sheetDurationInput');
+          if (inp) inp.value = m;
+          updateDurationChipsDom();
+          break;
+        }
+        case 'timer-toggle': {
+          toggleTimerStartStop();
+          break;
+        }
+        case 'timer-reset': {
+          resetTimerDisplay();
+          break;
+        }
+        case 'toggle-scale-tag': {
+          if (!state.logDraft) return;
+          const tag = target.dataset.tag;
+          const idx = state.logDraft.tags.indexOf(tag);
+          if (idx === -1) state.logDraft.tags.push(tag);
+          else state.logDraft.tags.splice(idx, 1);
+          target.classList.toggle('tag-active', idx === -1);
+          break;
+        }
+        case 'save-log': {
+          saveLogDraft();
+          break;
+        }
+        case 'close-modal': {
+          closeModal(target.dataset.modal);
+          break;
+        }
+        case 'set-analytics-period': {
+          state.data.ui.analyticsPeriod = Number(target.dataset.period) === 30 ? 30 : 7;
+          saveData();
+          render();
+          break;
+        }
+        case 'shift-cal-month': {
+          const delta = Number(target.dataset.delta) || 0;
+          const dt = new Date(state.calendarMonth.year, state.calendarMonth.month + delta, 1);
+          state.calendarMonth = { year: dt.getFullYear(), month: dt.getMonth() };
+          render();
+          break;
+        }
+        case 'select-cal-date': {
+          state.calendarSelectedDate = target.dataset.date;
+          render();
+          break;
+        }
+        case 'jump-to-date': {
+          state.selectedDate = target.dataset.date;
+          state.activeTab = 'record';
+          render();
+          break;
+        }
+        case 'load-sample': {
+          openConfirm(
+            'サンプルデータを読込',
+            '現在のデータをサンプルデータ（過去14日分・フェルリング／ラクール目標BPM入り）に置き換えますか？',
+            '読み込む',
+            loadSampleData
+          );
+          break;
+        }
+        case 'export-json': {
+          exportJsonFile();
+          break;
+        }
+        case 'copy-json': {
+          copyJsonToClipboard();
+          break;
+        }
+        case 'trigger-import-file': {
+          const fileInput = document.getElementById('jsonFileInput');
+          fileInput.value = '';
+          fileInput.click();
+          break;
+        }
+        case 'open-paste-import': {
+          document.getElementById('importJsonTextarea').value = '';
+          openModal('importPasteModal');
+          break;
+        }
+        case 'confirm-paste-import': {
+          const txt = document.getElementById('importJsonTextarea').value.trim();
+          if (importJsonString(txt)) {
+            closeModal('importPasteModal');
+          }
+          break;
+        }
+        case 'reset-all': {
+          openConfirm(
+            '全データをリセット',
+            'すべての練習履歴・カスタムメニュー・目標テンポを削除して初期状態に戻します。よろしいですか？',
+            'リセットする',
+            () => {
+              state.data = getDefaultData();
+              state.activeEtudeBookId = null;
+              saveData();
+              render();
+              showToast('データを初期化しました');
+            }
+          );
+          break;
+        }
+        case 'confirm-ok': {
+          const cb = state.confirmCallback;
+          state.confirmCallback = null;
+          closeModal('confirmModal');
+          if (typeof cb === 'function') cb();
+          break;
+        }
+      }
+    });
+
+    // Change & Input events inside modals
+    document.addEventListener('change', (e) => {
+      const target = e.target;
+      if (target.id === 'sheetNoTempoCheck' && state.logDraft) {
+        state.logDraft.noTempo = target.checked;
+        renderLogSheet();
+      } else if (target.id === 'addEtudeHasNumbers') {
+        const rangeBox = document.getElementById('addEtudeNumRange');
+        if (rangeBox) rangeBox.classList.toggle('hidden', !target.checked);
+      } else if (target.id === 'jsonFileInput') {
+        const file = target.files && target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => importJsonString(String(reader.result || ''));
+        reader.readAsText(file);
+      }
+    });
+
+    document.addEventListener('input', (e) => {
+      const target = e.target;
+      if (!state.logDraft) return;
+      if (target.id === 'sheetBpmInput') {
+        const v = parseInt(target.value, 10);
+        if (!isNaN(v)) state.logDraft.bpm = v;
+        updateTargetHintDom();
+      } else if (target.id === 'sheetTargetBpmInput') {
+        const raw = target.value.trim();
+        state.logDraft.targetBpm = raw === '' ? null : (parseInt(raw, 10) || null);
+        updateTargetHintDom();
+      } else if (target.id === 'sheetDurationInput') {
+        const v = parseInt(target.value, 10);
+        if (!isNaN(v) && v >= 1) {
+          state.logDraft.duration = v;
+          updateDurationChipsDom();
+        }
+      } else if (target.id === 'sheetMemoInput') {
+        state.logDraft.memo = target.value;
+      }
+    });
+
+    /* ========================
+       PWA Service Worker Registration
+       ======================== */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    /* ========================
+       Boot
+       ======================== */
+    setupPointerReorder();
+    render();
+  })();
+  </script>
+</body>
+</html>
