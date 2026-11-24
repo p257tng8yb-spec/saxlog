@@ -702,11 +702,11 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 8px 6px 7px;
+      padding: 6px 5px 6px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      height: 112px; /* Strict uniform height for ALL 24 keys */
+      height: 114px; /* Strict uniform height across ALL 24 keys */
       text-align: left;
       position: relative;
       overflow: hidden;
@@ -731,7 +731,8 @@
       align-items: baseline;
       justify-content: space-between;
       gap: 3px;
-      min-height: 20px;
+      min-height: 19px;
+      padding: 0 1px;
     }
 
     .scale-key-name {
@@ -763,13 +764,13 @@
 
     .scale-staff-box {
       width: 100%;
-      height: 44px; /* Identical graphic height across all 24 keys */
+      height: 50px; /* Identical graphic height across all 24 keys; spacious for stacked ♯6/♭6 */
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.22);
+      background: rgba(0, 0, 0, 0.24);
       border-radius: 7px;
-      margin: 4px 0;
+      margin: 3px 0;
       overflow: hidden;
     }
 
@@ -785,7 +786,8 @@
       justify-content: space-between;
       font-size: 10px;
       color: var(--text-sub);
-      min-height: 15px;
+      min-height: 14px;
+      padding: 0 1px;
     }
 
     /* Today's Logs List */
@@ -1101,7 +1103,7 @@
     .nav-tab.active { color: var(--gold-bright); }
     .nav-icon { font-size: 19px; line-height: 1; }
 
-    /* Modals / Bottom Sheets (Non-interfering when closed!) */
+    /* Modals / Bottom Sheets */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1208,8 +1210,8 @@
       margin-bottom: 12px;
     }
     .sheet-scale-banner .staff-lg {
-      width: 150px;
-      height: 54px;
+      width: 162px;
+      height: 66px;
       flex-shrink: 0;
     }
 
@@ -1274,7 +1276,7 @@
       background: var(--bg-input);
       border: 1px solid var(--border);
       padding: 10px 12px;
-      font-size: 14px;
+      font-size: 16px; /* 16px prevents iOS Safari zoom on focus */
       color: var(--text);
       outline: none;
     }
@@ -1308,32 +1310,115 @@
       color: var(--teal-bright);
     }
 
-    /* Timer Box */
-    .timer-box {
-      margin-top: 10px;
+    /* Unified Timer Panel (with Tap-to-Type 4-digit MMSS) */
+    .timer-panel {
       background: var(--bg-input);
       border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .timer-clock-shell {
+      position: relative;
+      width: 100%;
       border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid var(--border);
       padding: 10px 12px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    }
+    .timer-clock-shell.is-running {
+      border-color: var(--gold-border);
+      background: rgba(212, 175, 55, 0.06);
+    }
+    .timer-clock-shell.is-editing {
+      border-color: var(--gold-bright);
+      background: rgba(212, 175, 55, 0.12);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22);
     }
 
-    .timer-clock {
+    .timer-clock-display {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 20px;
+      font-size: 36px;
       font-weight: 800;
+      letter-spacing: 0.06em;
       color: var(--text);
-      letter-spacing: 0.04em;
+      line-height: 1.15;
+      pointer-events: none;
     }
-    .timer-clock.running { color: var(--gold-bright); }
+    .timer-clock-shell.is-running .timer-clock-display,
+    .timer-clock-shell.is-editing .timer-clock-display {
+      color: var(--gold-bright);
+    }
 
-    .timer-controls {
+    .timer-tap-caption {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      pointer-events: none;
+    }
+    .timer-clock-shell.is-editing .timer-tap-caption {
+      color: var(--gold-bright);
+      font-weight: 700;
+    }
+
+    /* Transparent full-surface numeric input for instant iOS numeric keypad */
+    .timer-direct-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      font-size: 16px; /* Prevents iOS zoom */
+      cursor: text;
+      border: none;
+      background: transparent;
+      caret-color: transparent;
+    }
+
+    .timer-controls-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .timer-main-btn {
+      min-height: 44px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
       display: flex;
+      align-items: center;
+      justify-content: center;
       gap: 6px;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-bright);
+    }
+    .timer-main-btn.running {
+      background: var(--amber-dim);
+      border-color: var(--amber-border);
+      color: #fbbf24;
+    }
+
+    .timer-reset-btn {
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
     }
 
     /* Target BPM Box */
@@ -1411,7 +1496,7 @@
     .dialog-msg { font-size: 13px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.5; }
     .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
-    /* Toast (Pointer-events passthrough except buttons!) */
+    /* Toast */
     .toast-container {
       position: fixed;
       left: 14px;
@@ -1670,6 +1755,29 @@
       return `${days}日前`;
     }
 
+    function getLogSeconds(log) {
+      if (log.durationSec !== undefined && log.durationSec !== null && !isNaN(Number(log.durationSec))) {
+        return Math.max(0, Math.round(Number(log.durationSec)));
+      }
+      return Math.max(0, Math.round((Number(log.duration) || 0) * 60));
+    }
+
+    function sumSecondsToMinutes(logs) {
+      const totalSec = logs.reduce((sum, l) => sum + getLogSeconds(l), 0);
+      if (totalSec === 0) return 0;
+      return Math.max(1, Math.round(totalSec / 60));
+    }
+
+    function formatDurationLabel(sec) {
+      const s = Math.max(0, Math.round(sec || 0));
+      if (s === 0) return '時間なし';
+      const mins = Math.floor(s / 60);
+      const rem = s % 60;
+      if (mins === 0) return `${rem}秒`;
+      if (rem === 0) return `${mins}分`;
+      return `${mins}分${rem}秒`;
+    }
+
     function uid(prefix) {
       return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
     }
@@ -1690,7 +1798,7 @@
             id: String(x.id),
             name: String(x.name),
             defaultBpm: (x.defaultBpm === null || x.defaultBpm === '' || isNaN(Number(x.defaultBpm))) ? null : Number(x.defaultBpm),
-            defaultDuration: Math.max(1, Number(x.defaultDuration) || 10)
+            defaultDuration: Math.max(0, Number(x.defaultDuration) || 10)
           }))
         : def.basics;
 
@@ -1710,7 +1818,7 @@
               startNum,
               endNum,
               defaultBpm: (x.defaultBpm === null || x.defaultBpm === '' || isNaN(Number(x.defaultBpm))) ? 100 : Number(x.defaultBpm),
-              defaultDuration: Math.max(1, Number(x.defaultDuration) || 15)
+              defaultDuration: Math.max(0, Number(x.defaultDuration) || 15)
             };
           })
         : def.etudes;
@@ -1724,20 +1832,26 @@
       }
 
       const logs = Array.isArray(raw.logs)
-        ? raw.logs.filter(l => l && l.date && l.category && l.itemId).map(l => ({
-            id: String(l.id || uid('log')),
-            date: String(l.date),
-            category: String(l.category),
-            itemId: String(l.itemId),
-            itemName: String(l.itemName || ''),
-            etudeNum: (l.etudeNum !== null && l.etudeNum !== undefined && l.etudeNum !== '') ? Number(l.etudeNum) : null,
-            bpm: (l.bpm !== null && l.bpm !== undefined && l.bpm !== '' && !isNaN(Number(l.bpm))) ? Number(l.bpm) : null,
-            targetBpm: (l.targetBpm !== null && l.targetBpm !== undefined && l.targetBpm !== '' && !isNaN(Number(l.targetBpm))) ? Number(l.targetBpm) : null,
-            duration: Math.max(1, Number(l.duration) || 5),
-            tags: Array.isArray(l.tags) ? l.tags.map(String) : [],
-            memo: String(l.memo || ''),
-            createdAt: Number(l.createdAt) || Date.now()
-          }))
+        ? raw.logs.filter(l => l && l.date && l.category && l.itemId).map(l => {
+            const sec = (l.durationSec !== undefined && l.durationSec !== null && !isNaN(Number(l.durationSec)))
+              ? Math.max(0, Math.round(Number(l.durationSec)))
+              : Math.max(0, Math.round((Number(l.duration) || 0) * 60));
+            return {
+              id: String(l.id || uid('log')),
+              date: String(l.date),
+              category: String(l.category),
+              itemId: String(l.itemId),
+              itemName: String(l.itemName || ''),
+              etudeNum: (l.etudeNum !== null && l.etudeNum !== undefined && l.etudeNum !== '') ? Number(l.etudeNum) : null,
+              bpm: (l.bpm !== null && l.bpm !== undefined && l.bpm !== '' && !isNaN(Number(l.bpm))) ? Number(l.bpm) : null,
+              targetBpm: (l.targetBpm !== null && l.targetBpm !== undefined && l.targetBpm !== '' && !isNaN(Number(l.targetBpm))) ? Number(l.targetBpm) : null,
+              durationSec: sec,
+              duration: sec > 0 ? Math.max(1, Math.round(sec / 60)) : 0,
+              tags: Array.isArray(l.tags) ? l.tags.map(String) : [],
+              memo: String(l.memo || ''),
+              createdAt: Number(l.createdAt) || Date.now()
+            };
+          })
         : [];
 
       const ui = {
@@ -1793,12 +1907,14 @@
       calendarSelectedDate: todayStr(),
       // Active Log Modal Draft
       logDraft: null,
-      // Timer state inside log modal
+      // Unified Timer state inside log modal
       timer: {
         running: false,
         startedAt: 0,
         accumulatedMs: 0,
-        intervalId: null
+        intervalId: null,
+        editing: false,
+        editDigits: ''
       },
       // Undo buffer
       lastDeletedMenu: null,
@@ -1811,65 +1927,67 @@
 
     /* ========================
        Key Signature SVG Builder
-       (Zero font-glyph dependency: pure vector paths!)
+       (Uniform 116x50 box; stacked full-width ♯6 / ♭6 for maximum readability!)
        ======================== */
-    // Accurate staff Y positions (staff lines: 11, 16, 21, 26, 31)
-    const SHARP_YS = [11, 18.5, 8.5, 16, 23.5, 13.5]; // F5, C5, G5, D5, A4, E5
-    const FLAT_YS  = [21, 13.5, 23.5, 16, 26, 18.5];  // B4, E5, A4, D5, G4, C5
+    const STD_LINES    = [13, 18.5, 24, 29.5, 35];
+    const STD_SHARP_YS = [13, 21.25, 10.25, 18.5, 26.75];   // F5, C5, G5, D5, A4
+    const STD_FLAT_YS  = [24, 15.75, 26.75, 18.5, 29.5];    // B4, E5, A4, D5, G4
 
-    function svgStaffLines(x1, x2, stroke) {
-      const ys = [11, 16, 21, 26, 31];
-      return ys.map(y => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${stroke}" stroke-width="0.85" />`).join('');
+    const TOP_LINES    = [5.5, 8.9, 12.3, 15.7, 19.1];      // step 3.4 (height 13.6)
+    const TOP_SHARP_YS = [5.5, 10.6, 3.8, 8.9, 14.0, 7.2];  // F5, C5, G5, D5, A4, E5
+    const BOT_LINES    = [30.9, 34.3, 37.7, 41.1, 44.5];    // step 3.4 (height 13.6)
+    const BOT_FLAT_YS  = [37.7, 32.6, 39.4, 34.3, 41.1, 36.0]; // B4, E5, A4, D5, G4, C5
+
+    function svgLines(ys, x1, x2, stroke, sw) {
+      return ys.map(y => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${stroke}" stroke-width="${sw}" />`).join('');
     }
 
-    function svgTrebleClef(x, color) {
-      // Crisp stylized treble clef anchored around staff lines 11..31 (G-curl around y=26)
+    // Treble clef path authored for staff lines y=11..31 (height 20)
+    const TREBLE_CLEF_PATH = 'M 6.2 35.5 C 4.2 36.2 3.2 34.4 4.4 33.4 C 5.5 32.5 7.2 33.6 6.8 35.0 C 6.6 35.8 7.5 35.5 7.7 33.8 L 8.9 7.2 C 9.0 4.6 7.0 3.8 5.9 5.5 C 4.8 7.2 5.6 11.2 8.2 14.2 C 10.6 17.0 3.0 20.8 3.2 26.2 C 3.4 30.2 6.8 31.6 9.6 30.3 C 12.2 29.0 12.6 25.4 10.4 23.6 C 8.4 22.0 5.9 23.3 6.0 25.6 C 6.1 27.3 7.4 28.0 8.5 27.6';
+
+    function svgTrebleClef(x, yOffset, scale, color, strokeWidth) {
       return `
-        <g transform="translate(${x}, 0)" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M 6.2 35.5 C 4.2 36.2 3.2 34.4 4.4 33.4 C 5.5 32.5 7.2 33.6 6.8 35.0 C 6.6 35.8 7.5 35.5 7.7 33.8 L 8.9 7.2 C 9.0 4.6 7.0 3.8 5.9 5.5 C 4.8 7.2 5.6 11.2 8.2 14.2 C 10.6 17.0 3.0 20.8 3.2 26.2 C 3.4 30.2 6.8 31.6 9.6 30.3 C 12.2 29.0 12.6 25.4 10.4 23.6 C 8.4 22.0 5.9 23.3 6.0 25.6 C 6.1 27.3 7.4 28.0 8.5 27.6" stroke-width="1.45" />
+        <g transform="translate(${x}, ${yOffset}) scale(${scale})" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round">
+          <path d="${TREBLE_CLEF_PATH}" stroke-width="${strokeWidth}" />
         </g>`;
     }
 
-    function svgSharp(x, y, color) {
+    function svgSharp(x, y, scale, color) {
       return `
-        <g transform="translate(${x}, ${y})" stroke="${color}" stroke-linecap="round">
-          <line x1="-1.5" y1="-4.6" x2="-1.5" y2="4.8" stroke-width="0.95" />
-          <line x1="1.6"  y1="-5.2" x2="1.6"  y2="4.2" stroke-width="0.95" />
-          <line x1="-3.3" y1="-1.2" x2="3.4"  y2="-2.4" stroke-width="1.35" />
-          <line x1="-3.3" y1="2.2"  x2="3.4"  y2="1.0"  stroke-width="1.35" />
+        <g transform="translate(${x}, ${y}) scale(${scale})" stroke="${color}" stroke-linecap="round">
+          <line x1="-1.55" y1="-4.7" x2="-1.55" y2="4.9" stroke-width="1.05" />
+          <line x1="1.65"  y1="-5.3" x2="1.65"  y2="4.3" stroke-width="1.05" />
+          <line x1="-3.4"  y1="-1.2" x2="3.5"   y2="-2.4" stroke-width="1.45" />
+          <line x1="-3.4"  y1="2.2"  x2="3.5"   y2="1.0"  stroke-width="1.45" />
         </g>`;
     }
 
-    function svgFlat(x, y, color) {
+    function svgFlat(x, y, scale, color) {
       return `
-        <g transform="translate(${x}, ${y})" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="-1.6" y1="-6.8" x2="-1.6" y2="2.8" stroke-width="1.05" />
-          <path d="M -1.6 -0.8 C 1.8 -2.8 3.2 -0.2 1.8 1.5 C 0.8 2.6 -0.6 2.9 -1.6 2.8" stroke-width="1.15" />
+        <g transform="translate(${x}, ${y}) scale(${scale})" fill="none" stroke="${color}" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="-1.6" y1="-6.8" x2="-1.6" y2="2.8" stroke-width="1.15" />
+          <path d="M -1.6 -0.8 C 2.0 -2.9 3.4 -0.1 1.9 1.6 C 0.8 2.7 -0.6 3.0 -1.6 2.8" stroke-width="1.25" />
         </g>`;
     }
 
     function buildKeySignatureSvg(scale) {
       const isMajor = scale.mode === 'major';
       const ink = isMajor ? '#e8c75e' : '#70d4ca';
-      const staffColor = 'rgba(255,255,255,0.26)';
+      const staffColor = 'rgba(255,255,255,0.28)';
 
-      // Special diagonal slash split for ♯6 / ♭6 keeping identical 116x42 box!
+      // ♯6 / ♭6: Stacked top & bottom using FULL horizontal width inside identical 116x50 box!
       if (scale.accType === 'both6') {
-        const sharpNotes = SHARP_YS.map((y, i) => svgSharp(22 + i * 9.5, y, ink)).join('');
-        const flatNotes  = FLAT_YS.map((y, i) => svgFlat(22 + i * 9.5, y, ink)).join('');
+        const sharpNotes = TOP_SHARP_YS.map((y, i) => svgSharp(28 + i * 14, y, 0.78, ink)).join('');
+        const flatNotes  = BOT_FLAT_YS.map((y, i)  => svgFlat(28 + i * 14, y, 0.78, ink)).join('');
         return `
-          <svg viewBox="0 0 116 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <g transform="translate(1, -1.5) scale(0.57)">
-              ${svgStaffLines(2, 82, staffColor)}
-              ${svgTrebleClef(3, ink)}
-              ${sharpNotes}
-            </g>
-            <line x1="65" y1="3" x2="51" y2="39" stroke="rgba(255,255,255,0.34)" stroke-width="1.2" stroke-linecap="round" />
-            <g transform="translate(60, 17.5) scale(0.57)">
-              ${svgStaffLines(2, 82, staffColor)}
-              ${svgTrebleClef(3, ink)}
-              ${flatNotes}
-            </g>
+          <svg viewBox="0 0 116 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            ${svgLines(TOP_LINES, 3, 113, staffColor, 0.7)}
+            ${svgTrebleClef(6, -1.98, 0.68, ink, 1.85)}
+            ${sharpNotes}
+            <line x1="6" y1="24.8" x2="110" y2="24.8" stroke="rgba(255,255,255,0.22)" stroke-width="0.85" stroke-dasharray="2.5 2.5" />
+            ${svgLines(BOT_LINES, 3, 113, staffColor, 0.7)}
+            ${svgTrebleClef(6, 23.42, 0.68, ink, 1.85)}
+            ${flatNotes}
           </svg>`;
       }
 
@@ -1877,18 +1995,18 @@
       let accs = '';
       if (scale.accType === 'sharp') {
         for (let i = 0; i < scale.accCount; i++) {
-          accs += svgSharp(30 + i * 11.5, SHARP_YS[i], ink);
+          accs += svgSharp(32 + i * 13.5, STD_SHARP_YS[i], 1.1, ink);
         }
       } else if (scale.accType === 'flat') {
         for (let i = 0; i < scale.accCount; i++) {
-          accs += svgFlat(30 + i * 11.5, FLAT_YS[i], ink);
+          accs += svgFlat(32 + i * 13.5, STD_FLAT_YS[i], 1.1, ink);
         }
       }
 
       return `
-        <svg viewBox="0 0 116 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          ${svgStaffLines(5, 111, staffColor)}
-          ${svgTrebleClef(8, ink)}
+        <svg viewBox="0 0 116 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          ${svgLines(STD_LINES, 5, 111, staffColor, 0.9)}
+          ${svgTrebleClef(8, 0.9, 1.1, ink, 1.45)}
           ${accs}
         </svg>`;
     }
@@ -1912,7 +2030,7 @@
       });
 
       if (matched.length === 0) {
-        return { count: 0, lastDate: null, lastBpm: null, maxBpm: null, lastDuration: null, elapsedDays: null };
+        return { count: 0, lastDate: null, lastBpm: null, maxBpm: null, lastDurationSec: 0, elapsedDays: null };
       }
 
       matched.sort((a, b) => {
@@ -1935,7 +2053,7 @@
         lastDate: latest.date,
         lastBpm,
         maxBpm,
-        lastDuration: latest.duration,
+        lastDurationSec: getLogSeconds(latest),
         elapsedDays: diffDays(latest.date, todayStr())
       };
     }
@@ -2031,11 +2149,18 @@
     }
 
     /* ========================
-       Timer Logic (Wall-clock accurate!)
+       Unified Timer + 4-Digit MMSS Direct Input
        ======================== */
-    function resetTimerState() {
+    function resetTimerState(initialSec) {
       stopTimerInterval();
-      state.timer = { running: false, startedAt: 0, accumulatedMs: 0, intervalId: null };
+      state.timer = {
+        running: false,
+        startedAt: 0,
+        accumulatedMs: Math.max(0, Math.round(initialSec || 0)) * 1000,
+        intervalId: null,
+        editing: false,
+        editDigits: ''
+      };
     }
 
     function stopTimerInterval() {
@@ -2051,62 +2176,85 @@
     }
 
     function formatClock(ms) {
-      const totalSec = Math.floor(ms / 1000);
+      const totalSec = Math.floor(Math.max(0, ms) / 1000);
       const mins = Math.floor(totalSec / 60);
       const secs = totalSec % 60;
       return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
 
+    function formatEditingDigits(digits) {
+      if (!digits) return formatClock(state.timer.accumulatedMs);
+      const padded = digits.padStart(4, '0');
+      return `${padded.slice(0, 2)}:${padded.slice(2, 4)}`;
+    }
+
+    function commitTimerDirectInput() {
+      if (!state.timer.editing) return;
+      if (state.timer.editDigits.length > 0) {
+        const padded = state.timer.editDigits.padStart(4, '0');
+        const mm = parseInt(padded.slice(0, 2), 10) || 0;
+        const ss = parseInt(padded.slice(2, 4), 10) || 0;
+        state.timer.accumulatedMs = (mm * 60 + ss) * 1000;
+      }
+      state.timer.editing = false;
+      state.timer.editDigits = '';
+      updateTimerDom();
+    }
+
     function updateTimerDom() {
+      const shell = document.getElementById('sheetTimerShell');
       const clockEl = document.getElementById('sheetTimerClock');
-      if (clockEl) {
+      const captionEl = document.getElementById('sheetTimerCaption');
+      const mainBtn = document.getElementById('sheetTimerToggleBtn');
+
+      if (!shell || !clockEl) return;
+
+      shell.classList.toggle('is-running', state.timer.running);
+      shell.classList.toggle('is-editing', state.timer.editing);
+
+      if (state.timer.editing) {
+        clockEl.textContent = formatEditingDigits(state.timer.editDigits);
+        if (captionEl) captionEl.textContent = '4桁で入力中（例：1000 → 10:00 ／ 0530 → 05:30）';
+      } else {
         clockEl.textContent = formatClock(getTimerElapsedMs());
-        clockEl.classList.toggle('running', state.timer.running);
+        if (captionEl) captionEl.textContent = state.timer.running ? '計測中（タップで停止して4桁入力）' : 'タップして4桁で直接入力（MMSS）';
+      }
+
+      if (mainBtn) {
+        mainBtn.classList.toggle('running', state.timer.running);
+        mainBtn.textContent = state.timer.running ? '⏸ 一時停止' : (state.timer.accumulatedMs > 0 ? '▶ 再開' : '▶ スタート');
       }
     }
 
     function toggleTimerStartStop() {
+      // If user was typing 4 digits, commit first
+      if (state.timer.editing) {
+        const inp = document.getElementById('sheetTimerDirectInput');
+        if (inp) inp.blur();
+        commitTimerDirectInput();
+      }
+
       if (!state.timer.running) {
         state.timer.running = true;
         state.timer.startedAt = Date.now();
         stopTimerInterval();
         state.timer.intervalId = setInterval(updateTimerDom, 250);
-        renderLogSheetTimerArea();
       } else {
-        // Stop and apply elapsed minutes to duration
-        const elapsedMs = getTimerElapsedMs();
-        state.timer.accumulatedMs = elapsedMs;
+        state.timer.accumulatedMs = getTimerElapsedMs();
         state.timer.running = false;
         stopTimerInterval();
-        const mins = Math.max(1, Math.round(elapsedMs / 60000));
-        if (state.logDraft) {
-          state.logDraft.duration = mins;
-          const durInput = document.getElementById('sheetDurationInput');
-          if (durInput) durInput.value = mins;
-          updateDurationChipsDom();
-        }
-        renderLogSheetTimerArea();
-        showToast(`タイマー計測（${formatClock(elapsedMs)}）→ ${mins}分を反映しました`);
       }
+      updateTimerDom();
     }
 
     function resetTimerDisplay() {
-      resetTimerState();
-      renderLogSheetTimerArea();
-    }
-
-    function renderLogSheetTimerArea() {
-      const box = document.getElementById('sheetTimerBox');
-      if (!box) return;
-      const elapsedMs = getTimerElapsedMs();
-      box.innerHTML = `
-        <div class="timer-clock ${state.timer.running ? 'running' : ''}" id="sheetTimerClock">${formatClock(elapsedMs)}</div>
-        <div class="timer-controls">
-          <button type="button" class="btn-mini ${state.timer.running ? 'amber' : 'gold'}" data-action="timer-toggle">
-            ${state.timer.running ? '⏹ 停止して反映' : '▶ タイマー開始'}
-          </button>
-          ${elapsedMs > 0 && !state.timer.running ? `<button type="button" class="btn-mini" data-action="timer-reset">リセット</button>` : ''}
-        </div>`;
+      const inp = document.getElementById('sheetTimerDirectInput');
+      if (inp) {
+        inp.value = '';
+        if (state.timer.editing) inp.blur();
+      }
+      resetTimerState(0);
+      updateTimerDom();
     }
 
     /* ========================
@@ -2149,7 +2297,7 @@
 
     function renderRecordView() {
       const dayLogs = getLogsForDate(state.selectedDate);
-      const totalMin = dayLogs.reduce((sum, l) => sum + (Number(l.duration) || 0), 0);
+      const totalMin = sumSecondsToMinutes(dayLogs);
       const cntBasic = dayLogs.filter(l => l.category === 'basic').length;
       const cntScale = dayLogs.filter(l => l.category === 'scale').length;
       const cntEtude = dayLogs.filter(l => l.category === 'etude').length;
@@ -2466,6 +2614,7 @@
       const bpmChip = l.bpm
         ? (tBpm ? `♩=${l.bpm} / 目標 ${tBpm}` : `♩=${l.bpm}`)
         : 'テンポなし';
+      const durText = formatDurationLabel(getLogSeconds(l));
       const tagsHtml = (l.tags && l.tags.length)
         ? l.tags.map(t => `<span class="badge-mini" style="font-size:10px;">${escapeHtml(t)}</span>`).join('')
         : '';
@@ -2480,7 +2629,7 @@
             </div>
             <div class="log-meta-line">
               <span style="color:var(--gold-bright);font-weight:700;">${bpmChip}</span>
-              <span>${l.duration}分</span>
+              <span>${durText}</span>
             </div>
             ${l.memo ? `<div class="log-memo">${escapeHtml(l.memo)}</div>` : ''}
           </div>
@@ -2499,14 +2648,19 @@
       const cutoff = addDays(todayStr(), -(period - 1));
       const periodLogs = state.data.logs.filter(l => l.date >= cutoff && l.date <= todayStr());
 
-      const minBasic = periodLogs.filter(l => l.category === 'basic').reduce((s, l) => s + l.duration, 0);
-      const minScale = periodLogs.filter(l => l.category === 'scale').reduce((s, l) => s + l.duration, 0);
-      const minEtude = periodLogs.filter(l => l.category === 'etude').reduce((s, l) => s + l.duration, 0);
-      const totalMin = minBasic + minScale + minEtude;
+      const secBasic = periodLogs.filter(l => l.category === 'basic').reduce((s, l) => s + getLogSeconds(l), 0);
+      const secScale = periodLogs.filter(l => l.category === 'scale').reduce((s, l) => s + getLogSeconds(l), 0);
+      const secEtude = periodLogs.filter(l => l.category === 'etude').reduce((s, l) => s + getLogSeconds(l), 0);
+      const totalSec = secBasic + secScale + secEtude;
 
-      const pctB = totalMin ? Math.round((minBasic / totalMin) * 100) : 0;
-      const pctS = totalMin ? Math.round((minScale / totalMin) * 100) : 0;
-      const pctE = totalMin ? Math.max(0, 100 - pctB - pctS) : 0;
+      const minBasic = secBasic > 0 ? Math.max(1, Math.round(secBasic / 60)) : 0;
+      const minScale = secScale > 0 ? Math.max(1, Math.round(secScale / 60)) : 0;
+      const minEtude = secEtude > 0 ? Math.max(1, Math.round(secEtude / 60)) : 0;
+      const totalMin = totalSec > 0 ? Math.max(1, Math.round(totalSec / 60)) : 0;
+
+      const pctB = totalSec ? Math.round((secBasic / totalSec) * 100) : 0;
+      const pctS = totalSec ? Math.round((secScale / totalSec) * 100) : 0;
+      const pctE = totalSec ? Math.max(0, 100 - pctB - pctS) : 0;
 
       // 1. Target-Unreached Etudes Pickup
       const unreachedList = [];
@@ -2548,7 +2702,7 @@
       });
       unreachedList.sort((a, b) => (b.elapsedDays ?? 999) - (a.elapsedDays ?? 999));
 
-      // 2. Neglected Ranking (Basics >=3d or unpracticed + Started Etude numbers >=5d + Books >=4d)
+      // 2. Neglected Ranking
       const neglected = [];
       state.data.basics.forEach(b => {
         const st = getItemStats('basic', b.id);
@@ -2563,7 +2717,6 @@
 
       state.data.etudes.forEach(book => {
         if (book.hasNumbers) {
-          // Only include started numbers to avoid spamming untouched numbers
           const startedNums = [];
           for (let n = book.startNum; n <= book.endNum; n++) {
             const st = getItemStats('etude', book.id, n);
@@ -2609,7 +2762,7 @@
           </button>`;
       }).join('');
 
-      // 4. BPM Summary (Basics + Active Etudes)
+      // 4. BPM Summary
       const bpmRows = [];
       state.data.basics.forEach(b => {
         const st = getItemStats('basic', b.id);
@@ -2754,12 +2907,11 @@
       const startDow = firstDay.getDay();
       const daysInMonth = lastDay.getDate();
 
-      // Sum minutes per day in this month
       const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
-      const dayMins = {};
+      const daySecs = {};
       state.data.logs.forEach(l => {
         if (l.date.startsWith(prefix)) {
-          dayMins[l.date] = (dayMins[l.date] || 0) + (Number(l.duration) || 0);
+          daySecs[l.date] = (daySecs[l.date] || 0) + getLogSeconds(l);
         }
       });
 
@@ -2770,7 +2922,8 @@
       const today = todayStr();
       for (let d = 1; d <= daysInMonth; d++) {
         const ds = `${prefix}${String(d).padStart(2, '0')}`;
-        const m = dayMins[ds] || 0;
+        const sec = daySecs[ds] || 0;
+        const m = sec > 0 ? Math.max(1, Math.round(sec / 60)) : 0;
         let hm = '';
         if (m >= 90) hm = 'hm4';
         else if (m >= 50) hm = 'hm3';
@@ -2787,7 +2940,7 @@
       }
 
       const selLogs = getLogsForDate(state.calendarSelectedDate);
-      const selTotal = selLogs.reduce((s, l) => s + l.duration, 0);
+      const selTotalMin = sumSecondsToMinutes(selLogs);
 
       return `
         <div class="card-panel">
@@ -2802,7 +2955,7 @@
 
         <div class="log-list-card">
           <div class="section-head">
-            <div class="section-title">${formatDisplayDate(state.calendarSelectedDate)}（${selTotal}分）</div>
+            <div class="section-title">${formatDisplayDate(state.calendarSelectedDate)}（${selTotalMin}分）</div>
             <button type="button" class="btn-mini gold" data-action="jump-to-date" data-date="${state.calendarSelectedDate}">＋ この日に記録</button>
           </div>
           ${selLogs.length === 0
@@ -2816,7 +2969,7 @@
        ======================== */
     function renderSettingsView() {
       const totalLogs = state.data.logs.length;
-      const totalMins = state.data.logs.reduce((s, l) => s + l.duration, 0);
+      const totalMins = sumSecondsToMinutes(state.data.logs);
 
       return `
         <div class="card-panel">
@@ -2868,12 +3021,12 @@
        Logging Bottom Sheet
        ======================== */
     function openLogSheet(opts) {
-      // opts: { category, itemId, etudeNum, editLogId, date }
-      resetTimerState();
-
       const editingLog = opts.editLogId
         ? state.data.logs.find(l => l.id === opts.editLogId)
         : null;
+
+      // Initialize timer: 00:00 for new log, saved seconds when editing an existing log
+      resetTimerState(editingLog ? getLogSeconds(editingLog) : 0);
 
       const category = editingLog ? editingLog.category : opts.category;
       const itemId = editingLog ? editingLog.itemId : opts.itemId;
@@ -2884,24 +3037,20 @@
 
       let itemName = '';
       let defaultBpm = 80;
-      let defaultDuration = 10;
       let etudeBook = null;
 
       if (category === 'basic') {
         const b = state.data.basics.find(x => x.id === itemId);
         itemName = b ? b.name : (editingLog ? editingLog.itemName : '基礎練習');
         defaultBpm = b ? b.defaultBpm : 80;
-        defaultDuration = b ? b.defaultDuration : 10;
       } else if (category === 'scale') {
         const s = SCALE_MAP[itemId];
         itemName = s ? s.name : (editingLog ? editingLog.itemName : 'スケール');
         defaultBpm = 88;
-        defaultDuration = 10;
       } else if (category === 'etude') {
         etudeBook = state.data.etudes.find(x => x.id === itemId);
         itemName = etudeBook ? etudeBook.name : (editingLog ? editingLog.itemName : 'エチュード');
         defaultBpm = etudeBook ? etudeBook.defaultBpm : 100;
-        defaultDuration = etudeBook ? etudeBook.defaultDuration : 15;
       }
 
       const prevStats = getItemStats(category, itemId, etudeNum);
@@ -2909,19 +3058,17 @@
         ? (state.data.etudeTargets[etudeTargetKey(itemId, etudeNum)] || null)
         : null;
 
-      let bpmVal, noTempo, durationVal, targetBpmVal, tagsVal, memoVal;
+      let bpmVal, noTempo, targetBpmVal, tagsVal, memoVal;
 
       if (editingLog) {
         bpmVal = editingLog.bpm;
         noTempo = editingLog.bpm === null;
-        durationVal = editingLog.duration;
         targetBpmVal = editingLog.targetBpm !== null ? editingLog.targetBpm : savedTarget;
         tagsVal = Array.isArray(editingLog.tags) ? [...editingLog.tags] : [];
         memoVal = editingLog.memo || '';
       } else {
         bpmVal = prevStats.lastBpm !== null ? prevStats.lastBpm : defaultBpm;
         noTempo = bpmVal === null;
-        durationVal = prevStats.lastDuration || defaultDuration;
         targetBpmVal = savedTarget;
         tagsVal = [];
         memoVal = '';
@@ -2938,7 +3085,6 @@
         bpm: bpmVal !== null ? bpmVal : 80,
         noTempo,
         targetBpm: targetBpmVal,
-        duration: durationVal,
         tags: tagsVal,
         memo: memoVal
       };
@@ -2956,7 +3102,6 @@
       const scaleObj = isScale ? SCALE_MAP[d.itemId] : null;
       const isNumberedEtude = isEtude && d.etudeBook && d.etudeBook.hasNumbers && d.etudeNum !== null;
 
-      // Scale tags: Major vs Minor (exact user spec!)
       let scaleTags = [];
       if (scaleObj) {
         scaleTags = scaleObj.mode === 'major'
@@ -2964,10 +3109,6 @@
           : ['和声的短音階', '旋律的短音階', '3〜8度', 'アルペジオ'];
       }
 
-      // Duration chips: hide 45 & 60 for scales!
-      const durPresets = isScale ? [5, 10, 15, 20, 30] : [5, 10, 15, 20, 30, 45, 60];
-
-      // Target BPM comparison hint
       let targetHintHtml = '';
       if (isEtude && d.targetBpm && !d.noTempo) {
         const diff = d.targetBpm - d.bpm;
@@ -3008,6 +3149,32 @@
             <div class="staff-lg">${buildKeySignatureSvg(scaleObj)}</div>
           </div>` : ''}
 
+        <!-- Unified Timer (Tap 00:00 for 4-digit MMSS direct input) -->
+        <div class="field-block">
+          <div class="field-label-row">
+            <span class="field-label">練習時間（タイマー）</span>
+          </div>
+          <div class="timer-panel">
+            <div class="timer-clock-shell" id="sheetTimerShell">
+              <div class="timer-clock-display" id="sheetTimerClock">00:00</div>
+              <div class="timer-tap-caption" id="sheetTimerCaption">タップして4桁で直接入力（MMSS）</div>
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                id="sheetTimerDirectInput"
+                class="timer-direct-input"
+                autocomplete="off"
+                aria-label="練習時間を4桁で直接入力（例：1030で10分30秒）"
+              />
+            </div>
+            <div class="timer-controls-row">
+              <button type="button" class="timer-main-btn" id="sheetTimerToggleBtn" data-action="timer-toggle">▶ スタート</button>
+              <button type="button" class="timer-reset-btn" data-action="timer-reset">↺ リセット</button>
+            </div>
+          </div>
+        </div>
+
         <!-- BPM -->
         <div class="field-block">
           <div class="field-label-row">
@@ -3043,24 +3210,6 @@
             <div id="sheetTargetHintWrap">${targetHintHtml}</div>
           </div>` : ''}
 
-        <!-- Duration + Timer -->
-        <div class="field-block">
-          <div class="field-label-row">
-            <span class="field-label">所要時間（分）</span>
-          </div>
-          <div class="stepper-row">
-            <button type="button" class="step-btn" data-action="step-duration" data-delta="-5">-5</button>
-            <button type="button" class="step-btn" data-action="step-duration" data-delta="-1">-1</button>
-            <input type="number" inputmode="numeric" id="sheetDurationInput" class="num-input" value="${d.duration}" min="1" max="360" />
-            <button type="button" class="step-btn" data-action="step-duration" data-delta="1">+1</button>
-            <button type="button" class="step-btn" data-action="step-duration" data-delta="5">+5</button>
-          </div>
-          <div class="chip-row" id="sheetDurChips">
-            ${durPresets.map(m => `<button type="button" class="chip-btn ${d.duration === m ? 'active' : ''}" data-action="set-duration" data-min="${m}">${m}分</button>`).join('')}
-          </div>
-          <div class="timer-box" id="sheetTimerBox"></div>
-        </div>
-
         <!-- Scale Quick Tags -->
         ${scaleTags.length > 0 ? `
           <div class="field-block">
@@ -3081,14 +3230,7 @@
           <button type="button" class="btn-save" data-action="save-log">${d.editLogId ? '変更を保存' : '記録を保存'}</button>
         </div>`;
 
-      renderLogSheetTimerArea();
-    }
-
-    function updateDurationChipsDom() {
-      if (!state.logDraft) return;
-      document.querySelectorAll('#sheetDurChips .chip-btn').forEach(btn => {
-        btn.classList.toggle('active', Number(btn.dataset.min) === state.logDraft.duration);
-      });
+      updateTimerDom();
     }
 
     function updateTargetHintDom() {
@@ -3109,16 +3251,18 @@
       const d = state.logDraft;
       if (!d) return;
 
-      // Auto-stop & apply running timer!
+      // Commit any active 4-digit direct input
+      commitTimerDirectInput();
+
+      // Auto-stop running timer and get exact elapsed seconds
+      const elapsedMs = getTimerElapsedMs();
       if (state.timer.running) {
-        const elapsedMs = getTimerElapsedMs();
         stopTimerInterval();
         state.timer.running = false;
-        d.duration = Math.max(1, Math.round(elapsedMs / 60000));
-      } else {
-        const durEl = document.getElementById('sheetDurationInput');
-        if (durEl) d.duration = Math.max(1, Math.min(360, parseInt(durEl.value, 10) || 1));
+        state.timer.accumulatedMs = elapsedMs;
       }
+      const durationSec = Math.floor(elapsedMs / 1000);
+      const durationMin = durationSec > 0 ? Math.max(1, Math.round(durationSec / 60)) : 0;
 
       const bpmEl = document.getElementById('sheetBpmInput');
       const targetEl = document.getElementById('sheetTargetBpmInput');
@@ -3134,7 +3278,6 @@
             finalTarget = parsedT;
           }
         }
-        // Persist target BPM for this etude (and number)
         const key = etudeTargetKey(d.itemId, d.etudeNum);
         if (finalTarget !== null) {
           state.data.etudeTargets[key] = finalTarget;
@@ -3152,7 +3295,8 @@
             ...state.data.logs[idx],
             bpm: finalBpm,
             targetBpm: finalTarget,
-            duration: d.duration,
+            durationSec,
+            duration: durationMin,
             tags: [...d.tags],
             memo: finalMemo
           };
@@ -3168,13 +3312,14 @@
           etudeNum: d.etudeNum,
           bpm: finalBpm,
           targetBpm: finalTarget,
-          duration: d.duration,
+          durationSec,
+          duration: durationMin,
           tags: [...d.tags],
           memo: finalMemo,
           createdAt: Date.now()
         });
         const label = d.etudeNum !== null ? `${d.itemName} No.${d.etudeNum}` : d.itemName;
-        showToast(`${label}（${d.duration}分）を記録しました`);
+        showToast(`${label}（${formatDurationLabel(durationSec)}）を記録しました`);
       }
 
       saveData();
@@ -3219,15 +3364,9 @@
             </div>
           </div>` : ''}
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div class="field-block">
-            <div class="field-label-row"><span class="field-label">目安BPM（任意）</span></div>
-            <input type="number" inputmode="numeric" id="addMenuBpm" class="text-input" value="${isEtude ? 100 : 80}" placeholder="空欄でテンポなし" />
-          </div>
-          <div class="field-block">
-            <div class="field-label-row"><span class="field-label">目安時間（分）</span></div>
-            <input type="number" inputmode="numeric" id="addMenuDur" class="text-input" value="${isEtude ? 15 : 10}" min="1" max="180" />
-          </div>
+        <div class="field-block">
+          <div class="field-label-row"><span class="field-label">目安BPM（任意）</span></div>
+          <input type="number" inputmode="numeric" id="addMenuBpm" class="text-input" value="${isEtude ? 100 : 80}" placeholder="空欄でテンポなし" />
         </div>
 
         <div class="sheet-footer">
@@ -3251,10 +3390,9 @@
 
       const rawBpm = (document.getElementById('addMenuBpm').value || '').trim();
       const defaultBpm = rawBpm === '' ? null : Math.max(20, Math.min(300, parseInt(rawBpm, 10) || 80));
-      const defaultDuration = Math.max(1, Math.min(180, parseInt(document.getElementById('addMenuDur').value, 10) || 10));
 
       if (category === 'basic') {
-        state.data.basics.push({ id: uid('b'), name, defaultBpm, defaultDuration });
+        state.data.basics.push({ id: uid('b'), name, defaultBpm, defaultDuration: 10 });
       } else {
         const hasNumbers = Boolean(document.getElementById('addEtudeHasNumbers').checked);
         let startNum = Math.max(1, parseInt(document.getElementById('addEtudeStartNum').value, 10) || 1);
@@ -3267,7 +3405,7 @@
           startNum: hasNumbers ? startNum : 1,
           endNum: hasNumbers ? endNum : 1,
           defaultBpm: defaultBpm || 100,
-          defaultDuration
+          defaultDuration: 15
         });
       }
 
@@ -3344,10 +3482,8 @@
         const dist = Math.hypot(d.lastX - d.startX, d.lastY - d.startY);
         if (dist > 8) d.moved = true;
 
-        // Clear previous highlights
         document.querySelectorAll('.menu-card.drag-over').forEach(el => el.classList.remove('drag-over'));
 
-        // Hit test card under pointer
         d.sourceCard.style.pointerEvents = 'none';
         const hit = document.elementFromPoint(e.clientX, e.clientY);
         d.sourceCard.style.pointerEvents = '';
@@ -3382,7 +3518,6 @@
 
         let targetIndex = d.overIndex;
 
-        // Flick fallback: if user flicked without dropping directly on another card
         if (targetIndex === d.fromIndex && d.moved) {
           const dx = d.lastX - d.startX;
           const dy = d.lastY - d.startY;
@@ -3420,7 +3555,7 @@
       const logs = [];
       let ts = Date.now() - 86400000 * 15;
 
-      const pushLog = (daysAgo, category, itemId, itemName, etudeNum, bpm, targetBpm, duration, tags, memo) => {
+      const pushLog = (daysAgo, category, itemId, itemName, etudeNum, bpm, targetBpm, durationMin, tags, memo) => {
         ts += 60000;
         logs.push({
           id: uid('smp'),
@@ -3431,14 +3566,14 @@
           etudeNum,
           bpm,
           targetBpm,
-          duration,
+          durationSec: durationMin * 60,
+          duration: durationMin,
           tags: tags || [],
           memo: memo || '',
           createdAt: ts
         });
       };
 
-      // Etude targets (realistic classical saxophone tempo targets)
       def.etudeTargets = {
         'e_ferling#1': 72,
         'e_ferling#2': 126,
@@ -3453,7 +3588,6 @@
         'e_lacour#3': 120
       };
 
-      // Basics across 14 days (intentionally leave Vibrato & Altissimo neglected)
       [13, 11, 9, 7, 5, 3, 1, 0].forEach((d, i) => {
         pushLog(d, 'basic', 'b_longtone', 'ロングトーン', null, 60, null, 10, [], i === 7 ? '低音B♭の立ち上がりを意識' : '');
       });
@@ -3466,7 +3600,6 @@
       pushLog(9, 'basic', 'b_dynamics', 'ダイナミクス・サブトーン', null, 60, null, 10, [], 'ppの安定');
       pushLog(11, 'basic', 'b_vibrato', 'ビブラート', null, 72, null, 5, [], '');
 
-      // Scales (mix of Major & Minor, leaving several keys unpracticed)
       pushLog(12, 'scale', 'sc_C',   'C',      null, 92,  null, 10, ['音階', '3〜8度'], '');
       pushLog(10, 'scale', 'sc_G',   'G',      null, 96,  null, 10, ['音階', 'アルペジオ'], '');
       pushLog(8,  'scale', 'sc_D',   'D',      null, 92,  null, 10, ['音階'], '');
@@ -3479,7 +3612,6 @@
       pushLog(3,  'scale', 'sc_dsm', 'd♯/e♭', null, 76,  null, 15, ['和声的短音階', 'アルペジオ'], 'サイドキー周り丁寧に');
       pushLog(1,  'scale', 'sc_cm',  'c',      null, 92,  null, 10, ['和声的短音階', '3〜8度'], '');
 
-      // Ferling numbered etudes (some reached target, some unreached, some old for review cycling)
       pushLog(13, 'etude', 'e_ferling', 'フェルリング（48の練習曲）', 1, 72,  72,  15, [], 'フレージング良好');
       pushLog(11, 'etude', 'e_ferling', 'フェルリング（48の練習曲）', 2, 112, 126, 20, [], '中盤の跳躍がまだ重い');
       pushLog(9,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 3, 66,  66,  15, [], '');
@@ -3489,7 +3621,6 @@
       pushLog(1,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 7, 60,  60,  15, [], '');
       pushLog(0,  'etude', 'e_ferling', 'フェルリング（48の練習曲）', 8, 108, 124, 20, [], 'あと+16でインテンポ');
 
-      // Lacour numbered etudes
       pushLog(8,  'etude', 'e_lacour',  'ラクール（50の練習曲）',     1, 112, 112, 15, [], '移調モード確認');
       pushLog(4,  'etude', 'e_lacour',  'ラクール（50の練習曲）',     2, 92,  104, 15, [], 'リズムの取り直し');
       pushLog(1,  'etude', 'e_lacour',  'ラクール（50の練習曲）',     3, 100, 120, 15, [], '音程の跳躍に注意');
@@ -3557,7 +3688,6 @@
 
       const action = target.dataset.action;
 
-      // Backdrop click: only close when clicking directly on the backdrop itself
       if (action === 'backdrop-close') {
         if (e.target === target) {
           closeModal(target.dataset.modal);
@@ -3698,26 +3828,6 @@
           renderLogSheet();
           break;
         }
-        case 'step-duration': {
-          if (!state.logDraft) return;
-          const delta = Number(target.dataset.delta) || 0;
-          const inp = document.getElementById('sheetDurationInput');
-          const cur = parseInt(inp ? inp.value : state.logDraft.duration, 10) || 5;
-          const next = Math.max(1, Math.min(360, cur + delta));
-          state.logDraft.duration = next;
-          if (inp) inp.value = next;
-          updateDurationChipsDom();
-          break;
-        }
-        case 'set-duration': {
-          if (!state.logDraft) return;
-          const m = Math.max(1, Number(target.dataset.min) || 10);
-          state.logDraft.duration = m;
-          const inp = document.getElementById('sheetDurationInput');
-          if (inp) inp.value = m;
-          updateDurationChipsDom();
-          break;
-        }
         case 'timer-toggle': {
           toggleTimerStartStop();
           break;
@@ -3827,6 +3937,37 @@
       }
     });
 
+    // Focus / Blur / Keydown for 4-digit MMSS Timer Direct Input
+    document.addEventListener('focusin', (e) => {
+      const target = e.target;
+      if (target && target.id === 'sheetTimerDirectInput') {
+        if (state.timer.running) {
+          state.timer.accumulatedMs = getTimerElapsedMs();
+          state.timer.running = false;
+          stopTimerInterval();
+        }
+        state.timer.editing = true;
+        state.timer.editDigits = '';
+        target.value = '';
+        updateTimerDom();
+      }
+    });
+
+    document.addEventListener('focusout', (e) => {
+      const target = e.target;
+      if (target && target.id === 'sheetTimerDirectInput') {
+        commitTimerDirectInput();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const target = e.target;
+      if (target && target.id === 'sheetTimerDirectInput' && e.key === 'Enter') {
+        e.preventDefault();
+        target.blur();
+      }
+    });
+
     // Change & Input events inside modals
     document.addEventListener('change', (e) => {
       const target = e.target;
@@ -3847,6 +3988,13 @@
 
     document.addEventListener('input', (e) => {
       const target = e.target;
+      if (target.id === 'sheetTimerDirectInput') {
+        const digits = target.value.replace(/\D/g, '').slice(-4);
+        target.value = digits;
+        state.timer.editDigits = digits;
+        updateTimerDom();
+        return;
+      }
       if (!state.logDraft) return;
       if (target.id === 'sheetBpmInput') {
         const v = parseInt(target.value, 10);
@@ -3856,12 +4004,6 @@
         const raw = target.value.trim();
         state.logDraft.targetBpm = raw === '' ? null : (parseInt(raw, 10) || null);
         updateTargetHintDom();
-      } else if (target.id === 'sheetDurationInput') {
-        const v = parseInt(target.value, 10);
-        if (!isNaN(v) && v >= 1) {
-          state.logDraft.duration = v;
-          updateDurationChipsDom();
-        }
       } else if (target.id === 'sheetMemoInput') {
         state.logDraft.memo = target.value;
       }

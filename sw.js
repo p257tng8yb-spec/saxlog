@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saxlog-v1';
+const CACHE_NAME = 'saxlog-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -23,19 +23,18 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Network-First: オンライン時は最新版を取得してキャッシュ更新、オフライン時はキャッシュから即起動
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;
-      }).catch(() => caches.match('./index.html'));
-    })
+      })
+      .catch(() => caches.match(event.request).then((res) => res || caches.match('./index.html')))
   );
 });
