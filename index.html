@@ -1257,24 +1257,47 @@
 
     .stepper-row {
       display: grid;
-      grid-template-columns: 46px 46px 1fr 46px 46px;
-      gap: 6px;
+      grid-template-columns: 64px 1fr 64px;
+      gap: 8px;
       align-items: center;
     }
 
     .step-btn {
-      min-height: 44px;
-      border-radius: 10px;
+      min-height: 46px;
+      border-radius: 12px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      font-size: 13px;
-      font-weight: 800;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
       color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s;
     }
     .step-btn:active { background: var(--bg-card-hover); }
+    .step-btn.holding {
+      background: var(--gold-dim);
+      border-color: var(--gold-bright);
+      color: var(--gold-bright);
+      transform: scale(0.95);
+    }
+    .step-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .stepper-hint {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: 5px;
+    }
 
     .num-input {
       width: 100%;
@@ -1502,37 +1525,33 @@
       font-weight: 700;
     }
 
-    /* Metronome Bar inside BPM Field */
+    /* Simple Digital Metronome Bar inside BPM Field */
     .metro-bar {
       margin-top: 8px;
       background: var(--bg-input);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 8px 10px;
+      padding: 7px 10px;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
     .metro-bar.playing {
       border-color: var(--gold-border);
       background: rgba(212, 175, 55, 0.07);
     }
-    .metro-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
     .metro-play-btn {
-      min-height: 36px;
-      padding: 0 13px;
+      flex: 1;
+      min-height: 38px;
+      padding: 0 14px;
       border-radius: 9px;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 800;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      gap: 6px;
       background: var(--gold-dim);
       border: 1px solid var(--gold-border);
       color: var(--gold-bright);
@@ -1542,48 +1561,25 @@
       border-color: var(--amber-border);
       color: #fbbf24;
     }
-    .metro-opts {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .metro-opt-btn {
-      min-height: 34px;
-      padding: 0 9px;
-      border-radius: 8px;
-      font-size: 11.5px;
-      font-weight: 700;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-sub);
-    }
-    .metro-opt-btn:hover { color: var(--text); }
-    .metro-dots {
+    .metro-pulse-wrap {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      min-height: 12px;
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
     }
     .metro-dot {
-      width: 9px;
-      height: 9px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.16);
       transition: transform 0.06s ease-out, background 0.06s ease-out, box-shadow 0.06s ease-out;
     }
-    .metro-dot.accent-beat {
-      border: 1px solid rgba(212, 175, 55, 0.45);
-    }
     .metro-dot.lit {
-      background: var(--teal-bright);
-      transform: scale(1.3);
-      box-shadow: 0 0 10px rgba(112, 212, 202, 0.75);
-    }
-    .metro-dot.lit-accent {
       background: var(--gold-bright);
       transform: scale(1.45);
-      box-shadow: 0 0 12px rgba(232, 199, 94, 0.9);
+      box-shadow: 0 0 12px rgba(232, 199, 94, 0.95);
     }
 
     #confirmModal {
@@ -1811,9 +1807,7 @@
           scaleSort: 'fifths',
           scaleFilter: 'all',
           etudeNumberFilter: 'all',
-          analyticsPeriod: 7,
-          metroBeats: 4,
-          metroSubdiv: 1
+          analyticsPeriod: 7
         }
       };
     }
@@ -1974,9 +1968,7 @@
         scaleSort: (raw.ui && raw.ui.scaleSort === 'chromatic') ? 'chromatic' : 'fifths',
         scaleFilter: (raw.ui && ['all', 'major', 'minor'].includes(raw.ui.scaleFilter)) ? raw.ui.scaleFilter : 'all',
         etudeNumberFilter: (raw.ui && ['all', 'unreached', 'review', 'untouched'].includes(raw.ui.etudeNumberFilter)) ? raw.ui.etudeNumberFilter : 'all',
-        analyticsPeriod: (raw.ui && Number(raw.ui.analyticsPeriod) === 30) ? 30 : 7,
-        metroBeats: (raw.ui && [0, 2, 3, 4, 6].includes(Number(raw.ui.metroBeats))) ? Number(raw.ui.metroBeats) : 4,
-        metroSubdiv: (raw.ui && [1, 2, 3, 4].includes(Number(raw.ui.metroSubdiv))) ? Number(raw.ui.metroSubdiv) : 1
+        analyticsPeriod: (raw.ui && Number(raw.ui.analyticsPeriod) === 30) ? 30 : 7
       };
 
       return { version: 5, basics, etudes, etudeTargets, logs, ui };
@@ -2034,13 +2026,16 @@
         editing: false,
         editDigits: ''
       },
-      // Metronome engine state (Web Audio API)
+      // Digital Metronome engine state (Pre-rendered AudioBuffer for rock-solid iOS playback)
       metro: {
         playing: false,
+        sessionId: 0,
         ctx: null,
+        masterGain: null,
+        clickBuffer: null,
         timerId: null,
         nextNoteTime: 0,
-        stepIndex: 0,
+        activeSources: [],
         visualTimeouts: []
       },
       // Undo buffer
@@ -2327,7 +2322,6 @@
       state.timer.editing = false;
       state.timer.editDigits = '';
       updateTimerDom();
-      updateMetronomeDom();
     }
 
     function updateTimerDom() {
@@ -2387,11 +2381,8 @@
     }
 
     /* ========================
-       Metronome Engine (Web Audio API lookahead scheduler)
+       Digital Quartz Metronome Engine (Pre-rendered AudioBuffer + iOS-safe lifecycle)
        ======================== */
-    const METRO_BEAT_CYCLE = [4, 3, 2, 6, 0];
-    const METRO_SUBDIV_LABELS = { 1: '♩ 4分', 2: '♪ 8分', 3: '3連', 4: '♬ 16分' };
-
     function getCurrentMetroBpm() {
       const inp = document.getElementById('sheetBpmInput');
       const raw = inp ? parseInt(inp.value, 10) : (state.logDraft ? state.logDraft.bpm : 80);
@@ -2399,132 +2390,181 @@
       return Math.max(20, Math.min(300, val || 80));
     }
 
+    function buildDigitalClickBuffer(ctx) {
+      // Classic digital quartz metronome "ピッ" (Korg/Seiko/Boss style):
+      // crisp flat 1760Hz electronic beep with subtle odd/even digital harmonics, fast 1.2ms attack, clean 28ms decay
+      const sr = ctx.sampleRate || 44100;
+      const dur = 0.032;
+      const len = Math.floor(sr * dur);
+      const buffer = ctx.createBuffer(1, len, sr);
+      const data = buffer.getChannelData(0);
+      const freq = 1760;
+
+      for (let i = 0; i < len; i++) {
+        const t = i / sr;
+        let env;
+        if (t < 0.0012) {
+          env = t / 0.0012;
+        } else if (t < 0.009) {
+          env = 1.0;
+        } else {
+          const decayT = (t - 0.009) / (dur - 0.009);
+          env = Math.pow(Math.max(0, 1 - decayT), 2.4);
+        }
+        // Clean quartz beep: pure fundamental + light digital harmonics for clear cut-through over sax
+        const wave =
+          0.74 * Math.sin(2 * Math.PI * freq * t) +
+          0.18 * Math.sin(2 * Math.PI * freq * 2 * t) +
+          0.08 * Math.sin(2 * Math.PI * freq * 3 * t);
+        data[i] = wave * env * 0.9;
+      }
+      return buffer;
+    }
+
     function ensureAudioContext() {
-      // Allow playback even when iPhone physical silent switch is on (iOS 17+ Safari)
       if (navigator.audioSession) {
         try { navigator.audioSession.type = 'playback'; } catch (_) {}
       }
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return null;
-      if (!state.metro.ctx) {
-        state.metro.ctx = new AudioCtx();
+
+      if (!state.metro.ctx || state.metro.ctx.state === 'closed') {
+        const ctx = new AudioCtx();
+        const master = ctx.createGain();
+        master.gain.value = 0.95;
+        master.connect(ctx.destination);
+        state.metro.ctx = ctx;
+        state.metro.masterGain = master;
+        state.metro.clickBuffer = buildDigitalClickBuffer(ctx);
       }
-      if (state.metro.ctx.state === 'suspended') {
-        state.metro.ctx.resume().catch(() => {});
+
+      const ctx = state.metro.ctx;
+      if (!state.metro.clickBuffer) {
+        state.metro.clickBuffer = buildDigitalClickBuffer(ctx);
       }
-      // Play a 1-sample silent buffer to unlock iOS WebKit audio reliably inside user gesture
+      return ctx;
+    }
+
+    function scheduleMetronomeClick(ctx, time) {
+      if (!state.metro.clickBuffer || !state.metro.masterGain) return;
       try {
-        const buf = state.metro.ctx.createBuffer(1, 1, 22050);
-        const src = state.metro.ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(state.metro.ctx.destination);
-        src.start(0);
+        const src = ctx.createBufferSource();
+        src.buffer = state.metro.clickBuffer;
+        src.connect(state.metro.masterGain);
+        state.metro.activeSources.push(src);
+        src.onended = () => {
+          const idx = state.metro.activeSources.indexOf(src);
+          if (idx !== -1) state.metro.activeSources.splice(idx, 1);
+          try { src.disconnect(); } catch (_) {}
+        };
+        const safeTime = Math.max(ctx.currentTime + 0.002, time);
+        src.start(safeTime);
       } catch (_) {}
-      return state.metro.ctx;
     }
 
-    function scheduleMetronomeClick(ctx, time, kind) {
-      // kind: 'accent' | 'beat' | 'sub'
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      if (kind === 'accent') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1480, time);
-        osc.frequency.exponentialRampToValueAtTime(880, time + 0.028);
-        gain.gain.setValueAtTime(0.001, time);
-        gain.gain.linearRampToValueAtTime(0.85, time + 0.002);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.045);
-      } else if (kind === 'beat') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(980, time);
-        osc.frequency.exponentialRampToValueAtTime(640, time + 0.025);
-        gain.gain.setValueAtTime(0.001, time);
-        gain.gain.linearRampToValueAtTime(0.68, time + 0.002);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.038);
-      } else {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1680, time);
-        gain.gain.setValueAtTime(0.001, time);
-        gain.gain.linearRampToValueAtTime(0.32, time + 0.002);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.022);
-      }
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(time);
-      osc.stop(time + 0.06);
-    }
-
-    function flashMetronomeDot(beatIdx, isAccent) {
-      const dots = document.querySelectorAll('#sheetMetroDots .metro-dot');
-      if (!dots.length) return;
-      dots.forEach((dot, idx) => {
-        dot.classList.remove('lit', 'lit-accent');
-        if (idx === beatIdx) {
-          dot.classList.add(isAccent ? 'lit-accent' : 'lit');
-        }
-      });
+    function pulseMetronomeDot() {
+      const dot = document.getElementById('sheetMetroDot');
+      if (!dot) return;
+      dot.classList.add('lit');
+      const offTid = setTimeout(() => {
+        if (dot) dot.classList.remove('lit');
+      }, 95);
+      state.metro.visualTimeouts.push(offTid);
     }
 
     function runMetronomeScheduler() {
       if (!state.metro.playing || !state.metro.ctx) return;
       const ctx = state.metro.ctx;
-      const scheduleAhead = 0.12;
 
-      while (state.metro.nextNoteTime < ctx.currentTime + scheduleAhead) {
-        const bpm = getCurrentMetroBpm();
-        const beatsPerBar = state.data.ui.metroBeats || 0;
-        const subdiv = state.data.ui.metroSubdiv || 1;
-        const step = state.metro.stepIndex;
-        const isMainBeat = (step % subdiv) === 0;
-        const beatNumber = Math.floor(step / subdiv);
-        const beatInBar = beatsPerBar > 0 ? (beatNumber % beatsPerBar) : 0;
-        const isAccent = isMainBeat && beatsPerBar > 0 && beatInBar === 0;
-
-        const kind = isAccent ? 'accent' : (isMainBeat ? 'beat' : 'sub');
-        const noteTime = state.metro.nextNoteTime;
-        scheduleMetronomeClick(ctx, noteTime, kind);
-
-        if (isMainBeat) {
-          const delayMs = Math.max(0, (noteTime - ctx.currentTime) * 1000);
-          const dotIdx = beatsPerBar > 0 ? beatInBar : (beatNumber % 2);
-          const tid = setTimeout(() => {
-            if (state.metro.playing) flashMetronomeDot(dotIdx, isAccent);
-          }, delayMs);
-          state.metro.visualTimeouts.push(tid);
-        }
-
-        const secondsPerStep = (60.0 / bpm) / subdiv;
-        state.metro.nextNoteTime += secondsPerStep;
-        state.metro.stepIndex++;
+      // Guard against iOS 'suspended' or 'interrupted' state
+      if (ctx.state !== 'running') {
+        ctx.resume().catch(() => {});
+        return;
       }
+
+      const now = ctx.currentTime;
+      // Prevent burst/freeze if AudioContext clock jumped forward
+      if (state.metro.nextNoteTime < now - 0.05) {
+        state.metro.nextNoteTime = now + 0.02;
+      }
+
+      const scheduleAhead = 0.12;
+      while (state.metro.nextNoteTime < now + scheduleAhead) {
+        const noteTime = state.metro.nextNoteTime;
+        scheduleMetronomeClick(ctx, noteTime);
+
+        const delayMs = Math.max(0, (noteTime - ctx.currentTime) * 1000);
+        const tid = setTimeout(() => {
+          if (state.metro.playing) pulseMetronomeDot();
+        }, delayMs);
+        state.metro.visualTimeouts.push(tid);
+
+        const bpm = getCurrentMetroBpm();
+        state.metro.nextNoteTime += 60.0 / bpm;
+      }
+    }
+
+    function beginMetronomeLoop(sessionId) {
+      if (!state.metro.playing || state.metro.sessionId !== sessionId) return;
+      const ctx = state.metro.ctx;
+      if (!ctx || ctx.state === 'closed') return;
+
+      if (state.metro.timerId) {
+        clearInterval(state.metro.timerId);
+        state.metro.timerId = null;
+      }
+      state.metro.nextNoteTime = ctx.currentTime + 0.03;
+      runMetronomeScheduler();
+      state.metro.timerId = setInterval(runMetronomeScheduler, 25);
     }
 
     function startMetronome() {
       if (state.logDraft && state.logDraft.noTempo) return;
+
+      // Clean any leftover timers/sources before starting fresh
+      stopMetronome();
+
       const ctx = ensureAudioContext();
       if (!ctx) {
         showToast('このブラウザではメトロノームを再生できません');
         return;
       }
+
+      const sessionId = ++state.metro.sessionId;
       state.metro.playing = true;
-      state.metro.stepIndex = 0;
-      state.metro.nextNoteTime = ctx.currentTime + 0.04;
-      if (state.metro.timerId) clearInterval(state.metro.timerId);
-      state.metro.timerId = setInterval(runMetronomeScheduler, 25);
-      runMetronomeScheduler();
       updateMetronomeDom();
+
+      if (ctx.state === 'running') {
+        beginMetronomeLoop(sessionId);
+      } else {
+        // iOS Safari requires resume() inside the click gesture, then start loop once running
+        ctx.resume().then(() => {
+          beginMetronomeLoop(sessionId);
+        }).catch(() => {
+          if (state.metro.sessionId === sessionId) {
+            stopMetronome();
+            showToast('音声を開始できませんでした（消音設定をご確認ください）');
+          }
+        });
+      }
     }
 
     function stopMetronome() {
+      state.metro.sessionId++;
       state.metro.playing = false;
       if (state.metro.timerId) {
         clearInterval(state.metro.timerId);
         state.metro.timerId = null;
       }
-      state.metro.visualTimeouts.forEach(id => clearTimeout(id));
-      state.metro.visualTimeouts = [];
+      // Immediately cancel any already-scheduled clicks so stopping is crisp and instant
+      const sources = state.metro.activeSources.splice(0);
+      sources.forEach(src => {
+        try { src.onended = null; src.stop(0); src.disconnect(); } catch (_) {}
+      });
+      const tids = state.metro.visualTimeouts.splice(0);
+      tids.forEach(id => clearTimeout(id));
+      const dot = document.getElementById('sheetMetroDot');
+      if (dot) dot.classList.remove('lit');
       updateMetronomeDom();
     }
 
@@ -2533,51 +2573,20 @@
       else startMetronome();
     }
 
-    function cycleMetroBeats() {
-      const cur = state.data.ui.metroBeats;
-      const idx = METRO_BEAT_CYCLE.indexOf(cur);
-      state.data.ui.metroBeats = METRO_BEAT_CYCLE[(idx + 1) % METRO_BEAT_CYCLE.length];
-      state.metro.stepIndex = 0;
-      saveData();
-      updateMetronomeDom();
-    }
-
-    function cycleMetroSubdiv() {
-      const cur = state.data.ui.metroSubdiv || 1;
-      state.data.ui.metroSubdiv = (cur % 4) + 1;
-      state.metro.stepIndex = 0;
-      saveData();
-      updateMetronomeDom();
-    }
-
     function updateMetronomeDom() {
       const bar = document.getElementById('sheetMetroBar');
       const playBtn = document.getElementById('sheetMetroPlayBtn');
-      const beatBtn = document.getElementById('sheetMetroBeatBtn');
-      const subBtn = document.getElementById('sheetMetroSubBtn');
-      const dotsEl = document.getElementById('sheetMetroDots');
+      const dot = document.getElementById('sheetMetroDot');
       if (!bar) return;
 
-      const beats = state.data.ui.metroBeats;
-      const subdiv = state.data.ui.metroSubdiv || 1;
       const playing = state.metro.playing;
-
       bar.classList.toggle('playing', playing);
       if (playBtn) {
         playBtn.classList.toggle('playing', playing);
         playBtn.textContent = playing ? '⏹ 停止' : '🔔 メトロノーム';
       }
-      if (beatBtn) {
-        beatBtn.textContent = beats === 0 ? '拍子: なし' : `${beats}拍子`;
-      }
-      if (subBtn) {
-        subBtn.textContent = METRO_SUBDIV_LABELS[subdiv] || '♩ 4分';
-      }
-      if (dotsEl) {
-        const dotCount = beats > 0 ? beats : 2;
-        dotsEl.innerHTML = Array.from({ length: dotCount }, (_, i) =>
-          `<span class="metro-dot ${beats > 0 && i === 0 ? 'accent-beat' : ''}"></span>`
-        ).join('');
+      if (!playing && dot) {
+        dot.classList.remove('lit');
       }
     }
 
@@ -3527,29 +3536,23 @@
         <!-- BPM -->
         <div class="field-block">
           <div class="field-label-row">
-            <span class="field-label">テンポ（BPM）</span>
+            <span class="field-label">テンポ（BPM）<span class="stepper-hint">長押しで10単位</span></span>
             <label class="toggle-inline">
               <input type="checkbox" id="sheetNoTempoCheck" data-action="toggle-no-tempo" ${d.noTempo ? 'checked' : ''} />
               <span>テンポなし</span>
             </label>
           </div>
           <div class="stepper-row">
-            <button type="button" class="step-btn" data-action="step-bpm" data-delta="-5" ${d.noTempo ? 'disabled' : ''}>-5</button>
-            <button type="button" class="step-btn" data-action="step-bpm" data-delta="-1" ${d.noTempo ? 'disabled' : ''}>-1</button>
+            <button type="button" class="step-btn" data-stepper="bpm" data-dir="-1" aria-label="BPMを下げる（長押しで10単位）" ${d.noTempo ? 'disabled' : ''}>−</button>
             <input type="number" inputmode="numeric" id="sheetBpmInput" class="num-input" value="${d.noTempo ? '' : d.bpm}" placeholder="---" min="20" max="300" ${d.noTempo ? 'disabled' : ''} />
-            <button type="button" class="step-btn" data-action="step-bpm" data-delta="1" ${d.noTempo ? 'disabled' : ''}>+1</button>
-            <button type="button" class="step-btn" data-action="step-bpm" data-delta="5" ${d.noTempo ? 'disabled' : ''}>+5</button>
+            <button type="button" class="step-btn" data-stepper="bpm" data-dir="1" aria-label="BPMを上げる（長押しで10単位）" ${d.noTempo ? 'disabled' : ''}>＋</button>
           </div>
           ${!d.noTempo ? `
             <div class="metro-bar" id="sheetMetroBar">
-              <div class="metro-row">
-                <button type="button" class="metro-play-btn" id="sheetMetroPlayBtn" data-action="metro-toggle">🔔 メトロノーム</button>
-                <div class="metro-opts">
-                  <button type="button" class="metro-opt-btn" id="sheetMetroBeatBtn" data-action="metro-cycle-beats">4拍子</button>
-                  <button type="button" class="metro-opt-btn" id="sheetMetroSubBtn" data-action="metro-cycle-subdiv">♩ 4分</button>
-                </div>
+              <button type="button" class="metro-play-btn" id="sheetMetroPlayBtn" data-action="metro-toggle">🔔 メトロノーム</button>
+              <div class="metro-pulse-wrap" aria-hidden="true">
+                <span class="metro-dot" id="sheetMetroDot"></span>
               </div>
-              <div class="metro-dots" id="sheetMetroDots"></div>
             </div>` : ''}
         </div>
 
@@ -3557,15 +3560,13 @@
         ${isEtude ? `
           <div class="field-block">
             <div class="field-label-row">
-              <span class="field-label">🎯 目標テンポ（インテンポ・任意）</span>
+              <span class="field-label">🎯 目標テンポ（インテンポ・任意）<span class="stepper-hint">長押しで10単位</span></span>
               ${d.targetBpm ? `<button type="button" class="btn-mini" style="min-height:26px;font-size:11px;padding:0 8px;" data-action="clear-target-bpm">クリア</button>` : ''}
             </div>
             <div class="stepper-row">
-              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="-5">-5</button>
-              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="-1">-1</button>
+              <button type="button" class="step-btn" data-stepper="target-bpm" data-dir="-1" aria-label="目標テンポを下げる（長押しで10単位）">−</button>
               <input type="number" inputmode="numeric" id="sheetTargetBpmInput" class="num-input" style="color:#fbbf24;" value="${d.targetBpm || ''}" placeholder="未設定" min="20" max="300" />
-              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="1">+1</button>
-              <button type="button" class="step-btn" data-action="step-target-bpm" data-delta="5">+5</button>
+              <button type="button" class="step-btn" data-stepper="target-bpm" data-dir="1" aria-label="目標テンポを上げる（長押しで10単位）">＋</button>
             </div>
             <div id="sheetTargetHintWrap">${targetHintHtml}</div>
           </div>` : ''}
@@ -3591,6 +3592,7 @@
         </div>`;
 
       updateTimerDom();
+      updateMetronomeDom();
     }
 
     function updateTargetHintDom() {
@@ -4150,14 +4152,6 @@
           toggleMetronome();
           break;
         }
-        case 'metro-cycle-beats': {
-          cycleMetroBeats();
-          break;
-        }
-        case 'metro-cycle-subdiv': {
-          cycleMetroSubdiv();
-          break;
-        }
         case 'delete-log': {
           const logId = target.dataset.logId;
           openConfirm('記録を削除', 'この練習記録を削除しますか？', '削除する', () => {
@@ -4177,28 +4171,7 @@
           }
           break;
         }
-        case 'step-bpm': {
-          if (!state.logDraft || state.logDraft.noTempo) return;
-          const delta = Number(target.dataset.delta) || 0;
-          const inp = document.getElementById('sheetBpmInput');
-          const cur = parseInt(inp ? inp.value : state.logDraft.bpm, 10) || 80;
-          const next = Math.max(20, Math.min(300, cur + delta));
-          state.logDraft.bpm = next;
-          if (inp) inp.value = next;
-          updateTargetHintDom();
-          break;
-        }
-        case 'step-target-bpm': {
-          if (!state.logDraft) return;
-          const delta = Number(target.dataset.delta) || 0;
-          const inp = document.getElementById('sheetTargetBpmInput');
-          const curVal = inp && inp.value.trim() !== '' ? parseInt(inp.value, 10) : (state.logDraft.bpm || 100);
-          const next = Math.max(20, Math.min(300, curVal + delta));
-          state.logDraft.targetBpm = next;
-          if (inp) inp.value = next;
-          updateTargetHintDom();
-          break;
-        }
+
         case 'clear-target-bpm': {
           if (!state.logDraft) return;
           state.logDraft.targetBpm = null;
@@ -4397,9 +4370,146 @@
     }
 
     /* ========================
+       BPM Stepper: Tap = ±1, Long-Press = 10-Unit Steps
+       ======================== */
+    function applyBpmStep(kind, dir, byTen) {
+      if (!state.logDraft) return;
+      if (kind === 'bpm') {
+        if (state.logDraft.noTempo) return;
+        const inp = document.getElementById('sheetBpmInput');
+        const cur = parseInt(inp ? inp.value : state.logDraft.bpm, 10) || 80;
+        let next;
+        if (byTen) {
+          next = dir > 0
+            ? Math.floor(cur / 10) * 10 + 10
+            : Math.ceil(cur / 10) * 10 - 10;
+        } else {
+          next = cur + dir;
+        }
+        next = Math.max(20, Math.min(300, next));
+        state.logDraft.bpm = next;
+        if (inp) inp.value = next;
+        updateTargetHintDom();
+      } else if (kind === 'target-bpm') {
+        const inp = document.getElementById('sheetTargetBpmInput');
+        const hasVal = inp && inp.value.trim() !== '';
+        const cur = hasVal ? (parseInt(inp.value, 10) || 100) : (state.logDraft.bpm || 100);
+        let next;
+        if (byTen) {
+          next = dir > 0
+            ? Math.floor(cur / 10) * 10 + 10
+            : Math.ceil(cur / 10) * 10 - 10;
+        } else {
+          next = cur + dir;
+        }
+        next = Math.max(20, Math.min(300, next));
+        state.logDraft.targetBpm = next;
+        if (inp) inp.value = next;
+        updateTargetHintDom();
+      }
+    }
+
+    function setupStepperLongPress() {
+      let hold = null;
+
+      function cancelHold(shouldTapSingle) {
+        if (!hold) return;
+        const h = hold;
+        hold = null;
+        if (h.delayId) clearTimeout(h.delayId);
+        if (h.repeatId) clearInterval(h.repeatId);
+        h.btn.classList.remove('holding');
+        try { h.btn.releasePointerCapture(h.pointerId); } catch (_) {}
+        if (shouldTapSingle && !h.didLongPress && !h.cancelled) {
+          applyBpmStep(h.kind, h.dir, false);
+        }
+      }
+
+      document.addEventListener('pointerdown', (e) => {
+        const btn = e.target.closest('button[data-stepper]');
+        if (!btn || btn.disabled) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+        cancelHold(false);
+        const kind = btn.dataset.stepper;
+        const dir = Number(btn.dataset.dir) || 0;
+        if (!kind || !dir) return;
+
+        hold = {
+          btn,
+          kind,
+          dir,
+          pointerId: e.pointerId,
+          startX: e.clientX,
+          startY: e.clientY,
+          didLongPress: false,
+          cancelled: false,
+          delayId: null,
+          repeatId: null
+        };
+
+        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+
+        hold.delayId = setTimeout(() => {
+          if (!hold || hold.cancelled) return;
+          hold.didLongPress = true;
+          hold.btn.classList.add('holding');
+          applyBpmStep(hold.kind, hold.dir, true);
+          hold.repeatId = setInterval(() => {
+            if (!hold || hold.cancelled) return;
+            applyBpmStep(hold.kind, hold.dir, true);
+          }, 210);
+        }, 350);
+      });
+
+      document.addEventListener('pointermove', (e) => {
+        if (!hold || e.pointerId !== hold.pointerId) return;
+        if (Math.hypot(e.clientX - hold.startX, e.clientY - hold.startY) > 14) {
+          hold.cancelled = true;
+          cancelHold(false);
+        }
+      });
+
+      document.addEventListener('pointerup', (e) => {
+        if (!hold || e.pointerId !== hold.pointerId) return;
+        cancelHold(true);
+      });
+
+      document.addEventListener('pointercancel', (e) => {
+        if (!hold || e.pointerId !== hold.pointerId) return;
+        cancelHold(false);
+      });
+
+      // Suppress iOS long-press callout / context menu on stepper buttons
+      document.addEventListener('contextmenu', (e) => {
+        if (e.target.closest('button[data-stepper]')) {
+          e.preventDefault();
+        }
+      });
+
+      // Keyboard accessibility
+      document.addEventListener('keydown', (e) => {
+        const btn = e.target.closest('button[data-stepper]');
+        if (!btn || btn.disabled) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          applyBpmStep(btn.dataset.stepper, Number(btn.dataset.dir) || 0, e.shiftKey);
+        }
+      });
+    }
+
+    // Stop metronome cleanly if app goes to background (prevents iOS AudioContext wedging)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && state.metro.playing) {
+        stopMetronome();
+      }
+    });
+
+    /* ========================
        Boot
        ======================== */
     setupPointerReorder();
+    setupStepperLongPress();
     render();
   })();
   </script>
