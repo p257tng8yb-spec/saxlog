@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saxlog-v2';
+const CACHE_NAME = 'saxlog-v3';
 const ASSETS = [
   './',
   './index.html',

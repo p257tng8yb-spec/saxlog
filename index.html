@@ -178,8 +178,9 @@
       padding: 14px 14px 10px;
     }
 
-    /* Daily Summary Strip */
+    /* Daily Summary Strip (Tappable to open Day Logs) */
     .summary-strip {
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -189,6 +190,12 @@
       padding: 12px 14px;
       margin-bottom: 12px;
       gap: 10px;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .summary-strip:hover {
+      border-color: var(--gold-border);
+      background: linear-gradient(135deg, #232836 0%, #191d26 100%);
     }
 
     .summary-total {
@@ -198,6 +205,20 @@
     .summary-total-label {
       font-size: 11px;
       color: var(--text-sub);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .summary-tap-hint {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      background: var(--gold-dim);
+      border: 1px solid rgba(212, 175, 55, 0.32);
+      border-radius: 999px;
+      padding: 1px 7px;
+      line-height: 1.4;
     }
     .summary-total-val {
       font-size: 22px;
@@ -1481,6 +1502,94 @@
       font-weight: 700;
     }
 
+    /* Metronome Bar inside BPM Field */
+    .metro-bar {
+      margin-top: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .metro-bar.playing {
+      border-color: var(--gold-border);
+      background: rgba(212, 175, 55, 0.07);
+    }
+    .metro-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .metro-play-btn {
+      min-height: 36px;
+      padding: 0 13px;
+      border-radius: 9px;
+      font-size: 12.5px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-bright);
+    }
+    .metro-play-btn.playing {
+      background: var(--amber-dim);
+      border-color: var(--amber-border);
+      color: #fbbf24;
+    }
+    .metro-opts {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .metro-opt-btn {
+      min-height: 34px;
+      padding: 0 9px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+    }
+    .metro-opt-btn:hover { color: var(--text); }
+    .metro-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 12px;
+    }
+    .metro-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.14);
+      transition: transform 0.06s ease-out, background 0.06s ease-out, box-shadow 0.06s ease-out;
+    }
+    .metro-dot.accent-beat {
+      border: 1px solid rgba(212, 175, 55, 0.45);
+    }
+    .metro-dot.lit {
+      background: var(--teal-bright);
+      transform: scale(1.3);
+      box-shadow: 0 0 10px rgba(112, 212, 202, 0.75);
+    }
+    .metro-dot.lit-accent {
+      background: var(--gold-bright);
+      transform: scale(1.45);
+      box-shadow: 0 0 12px rgba(232, 199, 94, 0.9);
+    }
+
+    #confirmModal {
+      z-index: 95;
+    }
+
     /* Confirm Dialog */
     .dialog-card {
       width: calc(100% - 32px);
@@ -1587,6 +1696,11 @@
         </button>
       </div>
     </nav>
+  </div>
+
+  <!-- Day Logs Bottom Sheet -->
+  <div class="modal-backdrop" id="dayLogsModal" data-action="backdrop-close" data-modal="dayLogsModal">
+    <div class="sheet" id="dayLogsSheetContent"></div>
   </div>
 
   <!-- Logging Bottom Sheet -->
@@ -1697,7 +1811,9 @@
           scaleSort: 'fifths',
           scaleFilter: 'all',
           etudeNumberFilter: 'all',
-          analyticsPeriod: 7
+          analyticsPeriod: 7,
+          metroBeats: 4,
+          metroSubdiv: 1
         }
       };
     }
@@ -1858,7 +1974,9 @@
         scaleSort: (raw.ui && raw.ui.scaleSort === 'chromatic') ? 'chromatic' : 'fifths',
         scaleFilter: (raw.ui && ['all', 'major', 'minor'].includes(raw.ui.scaleFilter)) ? raw.ui.scaleFilter : 'all',
         etudeNumberFilter: (raw.ui && ['all', 'unreached', 'review', 'untouched'].includes(raw.ui.etudeNumberFilter)) ? raw.ui.etudeNumberFilter : 'all',
-        analyticsPeriod: (raw.ui && Number(raw.ui.analyticsPeriod) === 30) ? 30 : 7
+        analyticsPeriod: (raw.ui && Number(raw.ui.analyticsPeriod) === 30) ? 30 : 7,
+        metroBeats: (raw.ui && [0, 2, 3, 4, 6].includes(Number(raw.ui.metroBeats))) ? Number(raw.ui.metroBeats) : 4,
+        metroSubdiv: (raw.ui && [1, 2, 3, 4].includes(Number(raw.ui.metroSubdiv))) ? Number(raw.ui.metroSubdiv) : 1
       };
 
       return { version: 5, basics, etudes, etudeTargets, logs, ui };
@@ -1915,6 +2033,15 @@
         intervalId: null,
         editing: false,
         editDigits: ''
+      },
+      // Metronome engine state (Web Audio API)
+      metro: {
+        playing: false,
+        ctx: null,
+        timerId: null,
+        nextNoteTime: 0,
+        stepIndex: 0,
+        visualTimeouts: []
       },
       // Undo buffer
       lastDeletedMenu: null,
@@ -2144,6 +2271,7 @@
       if (el) el.classList.remove('open');
       if (id === 'logModal') {
         stopTimerInterval();
+        stopMetronome();
         state.logDraft = null;
       }
     }
@@ -2199,6 +2327,7 @@
       state.timer.editing = false;
       state.timer.editDigits = '';
       updateTimerDom();
+      updateMetronomeDom();
     }
 
     function updateTimerDom() {
@@ -2258,6 +2387,201 @@
     }
 
     /* ========================
+       Metronome Engine (Web Audio API lookahead scheduler)
+       ======================== */
+    const METRO_BEAT_CYCLE = [4, 3, 2, 6, 0];
+    const METRO_SUBDIV_LABELS = { 1: '♩ 4分', 2: '♪ 8分', 3: '3連', 4: '♬ 16分' };
+
+    function getCurrentMetroBpm() {
+      const inp = document.getElementById('sheetBpmInput');
+      const raw = inp ? parseInt(inp.value, 10) : (state.logDraft ? state.logDraft.bpm : 80);
+      const val = (!isNaN(raw) && raw >= 20 && raw <= 300) ? raw : (state.logDraft ? state.logDraft.bpm : 80);
+      return Math.max(20, Math.min(300, val || 80));
+    }
+
+    function ensureAudioContext() {
+      // Allow playback even when iPhone physical silent switch is on (iOS 17+ Safari)
+      if (navigator.audioSession) {
+        try { navigator.audioSession.type = 'playback'; } catch (_) {}
+      }
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!state.metro.ctx) {
+        state.metro.ctx = new AudioCtx();
+      }
+      if (state.metro.ctx.state === 'suspended') {
+        state.metro.ctx.resume().catch(() => {});
+      }
+      // Play a 1-sample silent buffer to unlock iOS WebKit audio reliably inside user gesture
+      try {
+        const buf = state.metro.ctx.createBuffer(1, 1, 22050);
+        const src = state.metro.ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(state.metro.ctx.destination);
+        src.start(0);
+      } catch (_) {}
+      return state.metro.ctx;
+    }
+
+    function scheduleMetronomeClick(ctx, time, kind) {
+      // kind: 'accent' | 'beat' | 'sub'
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      if (kind === 'accent') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1480, time);
+        osc.frequency.exponentialRampToValueAtTime(880, time + 0.028);
+        gain.gain.setValueAtTime(0.001, time);
+        gain.gain.linearRampToValueAtTime(0.85, time + 0.002);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.045);
+      } else if (kind === 'beat') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(980, time);
+        osc.frequency.exponentialRampToValueAtTime(640, time + 0.025);
+        gain.gain.setValueAtTime(0.001, time);
+        gain.gain.linearRampToValueAtTime(0.68, time + 0.002);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.038);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1680, time);
+        gain.gain.setValueAtTime(0.001, time);
+        gain.gain.linearRampToValueAtTime(0.32, time + 0.002);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.022);
+      }
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.06);
+    }
+
+    function flashMetronomeDot(beatIdx, isAccent) {
+      const dots = document.querySelectorAll('#sheetMetroDots .metro-dot');
+      if (!dots.length) return;
+      dots.forEach((dot, idx) => {
+        dot.classList.remove('lit', 'lit-accent');
+        if (idx === beatIdx) {
+          dot.classList.add(isAccent ? 'lit-accent' : 'lit');
+        }
+      });
+    }
+
+    function runMetronomeScheduler() {
+      if (!state.metro.playing || !state.metro.ctx) return;
+      const ctx = state.metro.ctx;
+      const scheduleAhead = 0.12;
+
+      while (state.metro.nextNoteTime < ctx.currentTime + scheduleAhead) {
+        const bpm = getCurrentMetroBpm();
+        const beatsPerBar = state.data.ui.metroBeats || 0;
+        const subdiv = state.data.ui.metroSubdiv || 1;
+        const step = state.metro.stepIndex;
+        const isMainBeat = (step % subdiv) === 0;
+        const beatNumber = Math.floor(step / subdiv);
+        const beatInBar = beatsPerBar > 0 ? (beatNumber % beatsPerBar) : 0;
+        const isAccent = isMainBeat && beatsPerBar > 0 && beatInBar === 0;
+
+        const kind = isAccent ? 'accent' : (isMainBeat ? 'beat' : 'sub');
+        const noteTime = state.metro.nextNoteTime;
+        scheduleMetronomeClick(ctx, noteTime, kind);
+
+        if (isMainBeat) {
+          const delayMs = Math.max(0, (noteTime - ctx.currentTime) * 1000);
+          const dotIdx = beatsPerBar > 0 ? beatInBar : (beatNumber % 2);
+          const tid = setTimeout(() => {
+            if (state.metro.playing) flashMetronomeDot(dotIdx, isAccent);
+          }, delayMs);
+          state.metro.visualTimeouts.push(tid);
+        }
+
+        const secondsPerStep = (60.0 / bpm) / subdiv;
+        state.metro.nextNoteTime += secondsPerStep;
+        state.metro.stepIndex++;
+      }
+    }
+
+    function startMetronome() {
+      if (state.logDraft && state.logDraft.noTempo) return;
+      const ctx = ensureAudioContext();
+      if (!ctx) {
+        showToast('このブラウザではメトロノームを再生できません');
+        return;
+      }
+      state.metro.playing = true;
+      state.metro.stepIndex = 0;
+      state.metro.nextNoteTime = ctx.currentTime + 0.04;
+      if (state.metro.timerId) clearInterval(state.metro.timerId);
+      state.metro.timerId = setInterval(runMetronomeScheduler, 25);
+      runMetronomeScheduler();
+      updateMetronomeDom();
+    }
+
+    function stopMetronome() {
+      state.metro.playing = false;
+      if (state.metro.timerId) {
+        clearInterval(state.metro.timerId);
+        state.metro.timerId = null;
+      }
+      state.metro.visualTimeouts.forEach(id => clearTimeout(id));
+      state.metro.visualTimeouts = [];
+      updateMetronomeDom();
+    }
+
+    function toggleMetronome() {
+      if (state.metro.playing) stopMetronome();
+      else startMetronome();
+    }
+
+    function cycleMetroBeats() {
+      const cur = state.data.ui.metroBeats;
+      const idx = METRO_BEAT_CYCLE.indexOf(cur);
+      state.data.ui.metroBeats = METRO_BEAT_CYCLE[(idx + 1) % METRO_BEAT_CYCLE.length];
+      state.metro.stepIndex = 0;
+      saveData();
+      updateMetronomeDom();
+    }
+
+    function cycleMetroSubdiv() {
+      const cur = state.data.ui.metroSubdiv || 1;
+      state.data.ui.metroSubdiv = (cur % 4) + 1;
+      state.metro.stepIndex = 0;
+      saveData();
+      updateMetronomeDom();
+    }
+
+    function updateMetronomeDom() {
+      const bar = document.getElementById('sheetMetroBar');
+      const playBtn = document.getElementById('sheetMetroPlayBtn');
+      const beatBtn = document.getElementById('sheetMetroBeatBtn');
+      const subBtn = document.getElementById('sheetMetroSubBtn');
+      const dotsEl = document.getElementById('sheetMetroDots');
+      if (!bar) return;
+
+      const beats = state.data.ui.metroBeats;
+      const subdiv = state.data.ui.metroSubdiv || 1;
+      const playing = state.metro.playing;
+
+      bar.classList.toggle('playing', playing);
+      if (playBtn) {
+        playBtn.classList.toggle('playing', playing);
+        playBtn.textContent = playing ? '⏹ 停止' : '🔔 メトロノーム';
+      }
+      if (beatBtn) {
+        beatBtn.textContent = beats === 0 ? '拍子: なし' : `${beats}拍子`;
+      }
+      if (subBtn) {
+        subBtn.textContent = METRO_SUBDIV_LABELS[subdiv] || '♩ 4分';
+      }
+      if (dotsEl) {
+        const dotCount = beats > 0 ? beats : 2;
+        dotsEl.innerHTML = Array.from({ length: dotCount }, (_, i) =>
+          `<span class="metro-dot ${beats > 0 && i === 0 ? 'accent-beat' : ''}"></span>`
+        ).join('');
+      }
+    }
+
+    /* ========================
        Render Header & Nav
        ======================== */
     function renderHeader() {
@@ -2293,6 +2617,38 @@
       } else {
         main.innerHTML = renderSettingsView();
       }
+      const dayModal = document.getElementById('dayLogsModal');
+      if (dayModal && dayModal.classList.contains('open')) {
+        renderDayLogsSheet();
+      }
+    }
+
+    function renderDayLogsSheet() {
+      const dayLogs = getLogsForDate(state.selectedDate);
+      const totalMin = sumSecondsToMinutes(dayLogs);
+      const titleLabel = state.selectedDate === todayStr()
+        ? '今日の記録一覧'
+        : `${formatDisplayDate(state.selectedDate)} の記録`;
+
+      const logsHtml = dayLogs.length === 0
+        ? `<div class="empty-state">この日の記録はまだありません。メニューをタップして記録しましょう。</div>`
+        : dayLogs.map(l => renderLogRow(l)).join('');
+
+      document.getElementById('dayLogsSheetContent').innerHTML = `
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div>
+            <div class="sheet-title">${escapeHtml(titleLabel)}</div>
+            <div style="font-size:12px;color:var(--text-sub);">合計 <strong style="color:var(--gold-bright);">${totalMin}分</strong>（${dayLogs.length}件）</div>
+          </div>
+          <button type="button" class="close-btn" data-action="close-modal" data-modal="dayLogsModal">×</button>
+        </div>
+        <div>${logsHtml}</div>`;
+    }
+
+    function openDayLogsSheet() {
+      renderDayLogsSheet();
+      openModal('dayLogsModal');
     }
 
     function renderRecordView() {
@@ -2311,14 +2667,13 @@
         pillarContent = renderEtudesSection();
       }
 
-      const logsHtml = dayLogs.length === 0
-        ? `<div class="empty-state">この日の記録はまだありません。上のメニューをタップして記録しましょう。</div>`
-        : dayLogs.map(l => renderLogRow(l)).join('');
-
       return `
-        <div class="summary-strip">
+        <button type="button" class="summary-strip" data-action="open-day-logs" aria-label="この日の記録一覧を開く">
           <div class="summary-total">
-            <span class="summary-total-label">${state.selectedDate === todayStr() ? '今日の合計練習時間' : `${formatDisplayDate(state.selectedDate)} の合計`}</span>
+            <span class="summary-total-label">
+              <span>${state.selectedDate === todayStr() ? '今日の合計練習時間' : `${formatDisplayDate(state.selectedDate)} の合計`}</span>
+              <span class="summary-tap-hint">記録 ${dayLogs.length}件 ›</span>
+            </span>
             <span class="summary-total-val">${totalMin}<small>分</small></span>
           </div>
           <div class="summary-badges">
@@ -2326,7 +2681,7 @@
             <span class="pill-stat ${cntScale ? 'active-scale' : ''}">スケール ${cntScale}</span>
             <span class="pill-stat ${cntEtude ? 'active-etude' : ''}">エチュード ${cntEtude}</span>
           </div>
-        </div>
+        </button>
 
         <div class="segment-bar">
           <button type="button" class="segment-btn ${state.activePillar === 'basic' ? 'active' : ''}" data-action="switch-pillar" data-pillar="basic">基礎練習</button>
@@ -2334,14 +2689,7 @@
           <button type="button" class="segment-btn ${state.activePillar === 'etude' ? 'active' : ''}" data-action="switch-pillar" data-pillar="etude">エチュード</button>
         </div>
 
-        ${pillarContent}
-
-        <div class="log-list-card">
-          <div class="section-head" style="margin-bottom:4px;">
-            <div class="section-title">記録一覧（${dayLogs.length}件）</div>
-          </div>
-          ${logsHtml}
-        </div>`;
+        ${pillarContent}`;
     }
 
     function renderBasicsSection() {
@@ -2428,10 +2776,10 @@
           </div>
         </div>
         ${filter !== 'minor' ? `
-          <div class="scale-group-label major">MAJOR（長調・大文字）</div>
+          <div class="scale-group-label major">Major</div>
           <div class="scale-grid">${majors.map(renderTile).join('')}</div>` : ''}
         ${filter !== 'major' ? `
-          <div class="scale-group-label minor">minor（短調・小文字）</div>
+          <div class="scale-group-label minor">minor</div>
           <div class="scale-grid">${minors.map(renderTile).join('')}</div>` : ''}`;
     }
 
@@ -2874,7 +3222,7 @@
             <span>🎹 24調カバレッジマップ</span>
             <span class="badge-mini">濃いほど最近</span>
           </div>
-          <div style="font-size:11px;color:var(--gold-bright);font-weight:700;margin-bottom:5px;">MAJOR</div>
+          <div style="font-size:11px;color:var(--gold-bright);font-weight:700;margin-bottom:5px;">Major</div>
           <div class="coverage-grid">${renderCovCells('major')}</div>
           <div style="font-size:11px;color:var(--teal-bright);font-weight:700;margin:8px 0 5px;">minor</div>
           <div class="coverage-grid">${renderCovCells('minor')}</div>
@@ -3025,7 +3373,8 @@
         ? state.data.logs.find(l => l.id === opts.editLogId)
         : null;
 
-      // Initialize timer: 00:00 for new log, saved seconds when editing an existing log
+      // Initialize timer & stop any active metronome
+      stopMetronome();
       resetTimerState(editingLog ? getLogSeconds(editingLog) : 0);
 
       const category = editingLog ? editingLog.category : opts.category;
@@ -3191,6 +3540,17 @@
             <button type="button" class="step-btn" data-action="step-bpm" data-delta="1" ${d.noTempo ? 'disabled' : ''}>+1</button>
             <button type="button" class="step-btn" data-action="step-bpm" data-delta="5" ${d.noTempo ? 'disabled' : ''}>+5</button>
           </div>
+          ${!d.noTempo ? `
+            <div class="metro-bar" id="sheetMetroBar">
+              <div class="metro-row">
+                <button type="button" class="metro-play-btn" id="sheetMetroPlayBtn" data-action="metro-toggle">🔔 メトロノーム</button>
+                <div class="metro-opts">
+                  <button type="button" class="metro-opt-btn" id="sheetMetroBeatBtn" data-action="metro-cycle-beats">4拍子</button>
+                  <button type="button" class="metro-opt-btn" id="sheetMetroSubBtn" data-action="metro-cycle-subdiv">♩ 4分</button>
+                </div>
+              </div>
+              <div class="metro-dots" id="sheetMetroDots"></div>
+            </div>` : ''}
         </div>
 
         <!-- Target BPM for Etudes -->
@@ -3777,8 +4137,25 @@
           openLogSheet({ category: cat, itemId: id, etudeNum: num });
           break;
         }
+        case 'open-day-logs': {
+          openDayLogsSheet();
+          break;
+        }
         case 'edit-log': {
+          closeModal('dayLogsModal');
           openLogSheet({ editLogId: target.dataset.logId });
+          break;
+        }
+        case 'metro-toggle': {
+          toggleMetronome();
+          break;
+        }
+        case 'metro-cycle-beats': {
+          cycleMetroBeats();
+          break;
+        }
+        case 'metro-cycle-subdiv': {
+          cycleMetroSubdiv();
           break;
         }
         case 'delete-log': {
@@ -3973,6 +4350,7 @@
       const target = e.target;
       if (target.id === 'sheetNoTempoCheck' && state.logDraft) {
         state.logDraft.noTempo = target.checked;
+        if (target.checked) stopMetronome();
         renderLogSheet();
       } else if (target.id === 'addEtudeHasNumbers') {
         const rangeBox = document.getElementById('addEtudeNumRange');
